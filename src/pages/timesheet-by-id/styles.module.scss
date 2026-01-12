@@ -1,0 +1,113 @@
+@import '/src/styles/colors.scss';
+
+
+
+.card_container {
+    border-radius: 1rem;
+    border: 0.0625rem solid $border-color;
+    background: $white;
+
+    .heading {
+        color: $text;
+        font-family: Inter;
+        font-size: 1.125rem;
+        font-style: normal;
+        font-weight: 600;
+        line-height: 1.75rem;
+    }
+
+    .desc {
+        color: $resource-card-job-title;
+
+        /* Text sm/Regular */
+        font-family: Inter;
+        font-size: 0.875rem;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1.25rem;
+        /* 142.857% */
+    }
+}
+
+
+.card_heading {
+    color: $text;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+.card_heading_note {
+    color: $text;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+.card_heading_grey {
+    color: $resource-card-title;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+.card_desc {
+    color: $card-desc;
+
+    /* Text sm/Regular */
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1/25rem;
+    /* 142.857% */
+}
+
+
+.alert_icon {
+    border-radius: 1.75rem;
+    border: 0.5rem solid $alert-icon-border;
+    background: $alert-icon-background;
+}
+
+
+.switch_text {
+    color: $tag-grey-text;
+    font-family: Inter;
+    font-size: 0.87rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+
+.modal_heading {
+    color: $text;
+    font-family: Inter;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.75rem;
+    /* 155.556% */
+}
+
+
+.modal_desc {
+    color: $resource-card-job-title;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    /* 142.857% */
+}

@@ -1,0 +1,43 @@
+@import "/src/styles/colors.scss";
+
+
+
+.body_styles_success {
+
+    font-family: Inter;
+    font-size: 0.87rem;
+    color: $text-color;
+    background: $light-green-toast;
+    border: $border-green;
+    border-width: 0.5rem;
+}
+
+.body_styles_error {
+    font-family: Inter;
+    font-size: 0.87rem;
+    color: $text-color;
+    border-width: 0.5rem;
+    background-color: $light-red;
+    border: $busy;
+    border-width: 0.5rem;
+}
+
+.body_styles_warning {
+    font-family: Inter;
+    font-size: 0.87rem;
+    color: $text-color;
+    border-width: 0.5rem;
+    background-color: $light-red;
+    border: $busy;
+    border-width: 0.5rem;
+}
+
+.body_styles_info {
+    font-family: Inter;
+    font-size: 0.87rem;
+    color: $text-color;
+    border-width: 0.5rem;
+    background-color: $light-red;
+    border: $busy;
+    border-width: 0.5rem;
+}

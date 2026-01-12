@@ -1,0 +1,81 @@
+@import '/src/styles/colors.scss';
+
+
+@keyframes rotate-shadow {
+    0% {
+        box-shadow: 0 0 7px #ff5f6d;
+    }
+
+    25% {
+        box-shadow: 0 0 7px #ffc371;
+    }
+
+    50% {
+        box-shadow: 0 0 7px #ffd700;
+    }
+
+    65% {
+        box-shadow: 0 0 7px #32cd32;
+    }
+
+    70% {
+        box-shadow: 0 0 7px #00fa9a;
+    }
+
+    75% {
+        box-shadow: 0 0 7px #1e90ff;
+    }
+
+
+    100% {
+        box-shadow: 0 0 7px #ff5f6d;
+    }
+}
+
+.animated_border {
+    border: 2px solid none;
+    border-radius: 50%;
+    animation: rotate-shadow 2s linear infinite;
+
+}
+
+
+
+.custom_sider {
+    box-shadow: 0rem 0rem 1.5rem 0rem $light-shadow;
+
+
+    .sider_content {
+
+
+        .user_name_text {
+            color: $light-grey-text;
+            font-family: Inter;
+            font-size: 0.714rem;
+            margin-top: -2rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1rem;
+            letter-spacing: -0.004rem;
+        }
+
+        .icon {
+            font-size: 0.7rem;
+        }
+
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        .items_end {
+            margin-top: auto;
+        }
+    }
+}
+
+
+.img {
+    object-fit: fill;
+    height: 100%;
+    width: 100%;
+}

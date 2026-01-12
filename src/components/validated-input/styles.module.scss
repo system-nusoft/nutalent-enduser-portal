@@ -1,0 +1,38 @@
+@import '/src/styles/colors.scss';
+
+.success {
+  border-color: $dark-green !important;
+  background: $light-green;
+}
+
+.normal {
+  border-color: $border-color !important;
+  background: $white;
+}
+
+.error {
+  border-color: red !important;
+  background: $light-red;
+}
+
+.successText {
+  color: $dark-green;
+}
+
+.errorText {
+  color: red;
+}
+
+.label {
+  color: $text-color;
+}
+
+.input {
+  padding: 1rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
+  transition: border-color 0.3s ease;
+  box-shadow: none !important;
+}

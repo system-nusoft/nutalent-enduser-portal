@@ -1,0 +1,9 @@
+@import '/src/styles/colors.scss';
+
+.selected_text {
+    color: $primary !important;
+}
+
+.text {
+    color: $white !important;
+}

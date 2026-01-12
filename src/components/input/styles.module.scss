@@ -1,0 +1,26 @@
+@import '/src/styles/colors.scss';
+
+.label {
+  color: $text-color;
+}
+
+.error {
+  color: $light-red;
+}
+
+.input {
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid $border-color !important;
+  background: $white;
+  transition: border-color 0.3s ease;
+  box-shadow: none !important;
+}
+
+.input_without_border {
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none !important;
+  background: $white;
+  box-shadow: none !important;
+}

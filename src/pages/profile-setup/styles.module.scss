@@ -1,0 +1,78 @@
+@import '/src/styles/colors.scss';
+
+
+.main_container {
+    background-image: url('../../assets/image/background.png');
+    object-fit: cover;
+    background-size: cover;
+    background-color: $background-overlay;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-blend-mode: overlay;
+    object-fit: contain;
+
+
+    .heading {
+        color: $white;
+        text-align: left;
+        font-family: Inter;
+        font-size: 2rem;
+        font-style: normal;
+        font-weight: 600;
+        line-height: 2.5rem;
+        /* 125% */
+        letter-spacing: -0.063rem;
+    }
+
+    .description {
+        color: $card-border;
+        text-align: center;
+        /* Heading/H4 */
+        font-family: Inter;
+        font-size: 0.875rem;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        letter-spacing: -0.004rem;
+    }
+
+
+}
+
+.label {
+    color: $text;
+    text-align: right;
+    font-family: Inter;
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 2.5rem;
+    /* 125% */
+    letter-spacing: -0.063rem;
+}
+
+
+.hyper_link {
+    color: var(--Accents-Blueberry, #2C7CD9);
+    /* Body/Normal */
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    letter-spacing: -0.004rem;
+    text-decoration-line: underline;
+    cursor: pointer;
+}
+
+.hyper_link_description {
+    color: var(--Text-Subtext, #616161);
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1rem;
+    /* 133.333% */
+    letter-spacing: -0.004rem;
+}

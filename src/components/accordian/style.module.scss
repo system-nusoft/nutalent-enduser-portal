@@ -1,0 +1,61 @@
+@import '/src/styles/colors.scss';
+
+.selected {
+    border-radius: 3.5rem;
+    border: 0.063rem solid $border;
+    background: $white;
+    color: $text;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.063rem;
+    letter-spacing: -0.018rem;
+}
+
+.unSelected {
+    border-radius: 3.5rem;
+    border: 0.063rem solid $border-disabled;
+    background: $white;
+    color: $text-disabled;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.063rem;
+    letter-spacing: -0.018rem;
+}
+
+
+.heading {
+    color: $text;
+    /* Heading/H3 */
+    font-family: Inter;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.004rem;
+}
+
+.description {
+    color: $text-color;
+    /* Body/Normal */
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    /* 166.667% */
+    letter-spacing: -0.004rem;
+}
+
+.answer {
+    color: $text;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+}

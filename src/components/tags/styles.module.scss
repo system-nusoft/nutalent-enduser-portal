@@ -1,0 +1,62 @@
+@import '/src/styles/colors.scss';
+
+
+
+
+
+.tag_styles_default {
+    background: $card-background-grey;
+    color: $light-grey-text;
+    font-family: Inter;
+    font-size: 0.688rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1rem;
+    border: 0.1rem $card-background-grey solid;
+    border-radius: 1rem;
+    mix-blend-mode: multiply;
+    padding: 0.4rem 0.7rem;
+}
+
+.tag_styles_pending {
+    border: 0.1rem $tag-blue-border solid;
+    border-radius: 1rem;
+    mix-blend-mode: multiply;
+    background: $tag-blue-background;
+    color: $tag-blue-text;
+    font-family: Inter;
+    font-size: 0.688rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1rem;
+    padding: 0.4rem 0.7rem;
+}
+
+
+.tag_styles_success {
+    border: 0.1rem $tag-green-border solid;
+    border-radius: 1rem;
+    mix-blend-mode: multiply;
+    background: $tag-green-background;
+    color: $tag-green-text;
+    font-family: Inter;
+    font-size: 0.688rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1rem;
+    padding: 0.4rem 0.7rem;
+}
+
+.tag_styles_error {
+    border: 0.1rem $warning-tag-border solid;
+    border-radius: 1rem;
+    padding: 0.4rem 0.7rem;
+    mix-blend-mode: multiply;
+    background: $warning-tag-bg;
+    color: $warning-tag-text;
+    font-family: Inter;
+    font-size: 0.688rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1rem;
+}

@@ -1,0 +1,8 @@
+@import '/src/styles/colors.scss';
+
+.upload_container {
+  border-radius: 0.5rem;
+  border: 0.0625rem dashed $border-color;
+  background: $background-grey;
+  cursor: pointer;
+}

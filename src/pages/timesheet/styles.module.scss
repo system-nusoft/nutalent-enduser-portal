@@ -1,0 +1,41 @@
+@import '/src/styles/colors.scss';
+
+
+
+.switch_text {
+    color: $tag-grey-text;
+    font-family: Inter;
+    font-size: 0.87rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+
+.purple_card {
+    background: $purple;
+    padding: 1.5rem;
+
+    .large_heading {
+        color: $text;
+        /* Display sm/Medium */
+        font-family: Inter;
+        font-size: 1.875rem;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 2.375rem;
+        /* 126.667% */
+    }
+
+    .small_heading {
+        color: $text;
+        /* Text sm/Medium */
+        font-family: Inter;
+        font-size: 0.875rem;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 1.25rem;
+        /* 142.857% */
+    }
+}

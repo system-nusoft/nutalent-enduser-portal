@@ -1,0 +1,72 @@
+@import '/src/styles/colors.scss';
+
+.card_heading {
+    font-family: Inter;
+    font-size: 0.87rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+
+.card_desc {
+    color: $resource-card-title;
+    /* Text sm/Regular */
+    font-family: Inter;
+    font-size: 0.87rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+.card_desc_brown {
+    color: $warning-text;
+    /* Text sm/Regular */
+    font-family: Inter;
+    font-size: 0.87rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    /* 142.857% */
+}
+
+.card_date {
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+    /* 150% */
+}
+
+.card_amount {
+    font-family: Inter;
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.875rem;
+    /* 150% */
+}
+
+.modal_heading {
+    color: $text;
+    font-family: Inter;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.75rem;
+    /* 155.556% */
+}
+
+
+.modal_desc {
+    color: $resource-card-job-title;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    /* 142.857% */
+}

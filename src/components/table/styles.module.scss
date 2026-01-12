@@ -1,0 +1,67 @@
+@import '/src/styles/colors.scss';
+@import "/src/styles/mixins.scss";
+
+.customTable_20 {
+    border: 1px solid $table-border;
+    background: transparent;
+
+    :global {
+        .ant-table-content {
+            overflow: auto hidden;
+        }
+
+        .ant-table {
+            min-height: calc(100vh - 24rem);
+        }
+
+        .ant-table-body {
+            scrollbar-width: thin;
+            scrollbar-color: $track-bar-table;
+            border-radius: 1rem;
+
+        }
+    }
+}
+
+.customTable_simple {
+    border: 1px solid $table-border;
+    background: transparent;
+
+    :global {
+        .ant-table-content {
+            overflow: auto hidden;
+        }
+
+        .ant-table {
+            min-height: calc(100vh - 24rem);
+        }
+
+        .ant-table-body {
+            scrollbar-width: thin;
+            scrollbar-color: $track-bar-table;
+
+
+        }
+    }
+}
+
+.customTable_26 {
+    border: 1px solid $table-border;
+    background: transparent;
+
+    :global {
+        .ant-table-content {
+            overflow: auto hidden;
+        }
+
+        .ant-table {
+            min-height: calc(100vh - 27rem);
+        }
+
+        .ant-table-body {
+            scrollbar-width: thin;
+            scrollbar-color: $track-bar-table;
+            border-radius: 1rem;
+        }
+    }
+}

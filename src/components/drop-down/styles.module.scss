@@ -1,0 +1,40 @@
+@import '/src/styles/colors.scss';
+
+.form_div {
+    height: min-content;
+    width: 100%;
+    margin: 0rem 0rem 0.5rem 0rem;
+    flex: 1 0 0;
+    border-radius: 2rem;
+
+    .multiSelect {
+        border: none !important;
+        /* Remove any default border */
+        box-shadow: none !important;
+        /* Remove any box shadow */
+
+        /* Remove border specifically for the selector */
+        .ant-select-selector {
+            border: none !important;
+            box-shadow: none !important;
+            background-color: transparent !important;
+        }
+
+        /* Remove focus border */
+        &:focus {
+            border: none !important;
+            /* Ensure border is none */
+        }
+    }
+}
+
+.input_label_style {
+    color: $text-color;
+    font-size: 0.87rem;
+    font-weight: 400;
+    line-height: 1.375rem;
+}
+
+.margin_bottom_negative {
+    margin-bottom: -0.08rem;
+}

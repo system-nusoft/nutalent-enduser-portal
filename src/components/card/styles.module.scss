@@ -1,0 +1,13 @@
+@import '/src/styles/colors.scss';
+
+
+.title {
+    color: $text;
+    /* Heading/H2 */
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.03rem;
+}

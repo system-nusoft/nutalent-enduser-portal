@@ -1,0 +1,56 @@
+@import '/src/styles/colors.scss';
+
+.card {
+    border-radius: 1rem;
+    background: $card-blue-bg;
+
+    .heading {
+        color: $text;
+
+        /* Heading/H3 */
+        font-family: Inter;
+        font-size: 1.125rem;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 0.07px;
+    }
+
+    .description {
+        color: $text;
+
+        /* Body/Large 14 */
+        font-family: Inter;
+        font-size: 0.875rem;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1.125rem;
+        /* 128.571% */
+        letter-spacing: -0.06px;
+    }
+
+}
+
+.skills {
+    color: $text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1rem;
+    /* 133.333% */
+    text-transform: capitalize;
+}
+
+.example_text {
+    color: $text-disabled;
+    /* Body/Large 14 */
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+    /* 128.571% */
+    letter-spacing: -0.06px;
+}

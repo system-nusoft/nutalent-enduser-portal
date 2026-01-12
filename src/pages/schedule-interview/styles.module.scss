@@ -1,0 +1,92 @@
+@import '/src/styles/colors.scss';
+
+
+
+.img_gif {
+    background: url('../../assets/image/interview-scheduled.gif') lightgray 50% / cover no-repeat;
+    mix-blend-mode: multiply;
+    height: 8.938rem;
+    width: 8.938rem;
+}
+
+.greeting_text {
+    color: $text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.48px;
+}
+
+
+.greeting_desc {
+    color: $card-label;
+    text-align: center;
+
+    /* Body/Large 14 */
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+    /* 128.571% */
+    letter-spacing: -0.06px;
+}
+
+.Interview_text {
+    color: $text;
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.03rem;
+}
+
+
+.icon_text {
+    color: $dard-light;
+    font-family: Inter;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+}
+
+.desc {
+    color: $text;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    letter-spacing: -0.004rem;
+}
+
+.dropdown_text {
+    color: $light-time-zone-text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+    /* 21px */
+}
+
+.heading2 {
+    color: $light-time-zone-text;
+    font-family: Inter;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+    /* 24px */
+}
+
+.img {
+    width: 5.406rem;
+    height: 5.406rem;
+}

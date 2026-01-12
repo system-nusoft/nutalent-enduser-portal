@@ -1,0 +1,15 @@
+@import '/src/styles/colors.scss';
+
+.range_input_container {
+    display: flex;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid $border-color !important;
+    background: $white;
+    transition: border-color 0.3s ease;
+    box-shadow: none !important;
+}
+
+.label {
+    color: $text-color
+}

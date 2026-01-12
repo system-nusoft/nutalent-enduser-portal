@@ -1,0 +1,48 @@
+@import '/src/styles/colors.scss';
+
+.heading {
+    color: $heading-color;
+    font-family: Inter;
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 2.5rem;
+    letter-spacing: -0.03rem;
+}
+
+.icon {
+    font-size: 0.7rem;
+    color: $tag-grey-text;
+    margin-top: 0.4rem;
+}
+
+.avatar {
+    border-radius: 2rem;
+    border: 1px solid $avatar-border;
+    background: $avatar-bg;
+
+    .text {
+        color: $text;
+        text-align: center;
+        font-family: Inter;
+        font-size: 1.375rem;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 1.5rem;
+        /* 109.091% */
+        letter-spacing: 0.07px;
+    }
+}
+
+
+.description {
+    color: $text-color;
+    /* Body/Large 14 */
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+    /* 128.571% */
+    letter-spacing: -0.004rem;
+}

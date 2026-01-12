@@ -1,0 +1,45 @@
+@import '/src/styles/colors.scss';
+
+.tag_grey {
+
+    border-radius: 1rem;
+    border: 0.063rem solid $tag-grey-border;
+    background: $tag-grey-background;
+    mix-blend-mode: multiply;
+    color: $tag-grey-text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.125rem;
+}
+
+.tag_green {
+
+    border-radius: 1rem;
+    border: 0.063rem solid $tag-green-border;
+    background: $tag-green-background;
+    mix-blend-mode: multiply;
+    color: $tag-green-text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.125rem;
+}
+
+.tag_blue {
+    border-radius: 1rem;
+    border: 0.063rem solid $tag-blue-border;
+    background: $tag-blue-background;
+    mix-blend-mode: multiply;
+    color: $tag-blue-text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.125rem;
+}

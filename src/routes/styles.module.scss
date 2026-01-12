@@ -1,0 +1,26 @@
+@import '/src/styles/colors.scss';
+
+.copyright_Text {
+    color: $text-color;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1rem;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+
+.back_button {
+    color: $text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.8rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1rem;
+    /* 114.286% */
+    text-transform: capitalize;
+}
