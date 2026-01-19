@@ -28,7 +28,7 @@ interface props {
 }
 
 interface SkillsDisplayProps {
-  skills: string;
+  skills: string | string[];
 }
 
 export const ProfileSuggestions = ({
@@ -49,11 +49,15 @@ export const ProfileSuggestions = ({
     limit && Array.isArray(list)
       ? list?.slice(0, 4).filter((i) => i.id !== limit?.id)
       : Array.isArray(resourceList)
-      ? resourceList
-      : [];
+        ? resourceList
+        : [];
 
   const SkillsDisplay = ({ skills }: SkillsDisplayProps) => {
-    const skillArray = skills.split(",").map((item) => item.trim());
+    const skillArray = Array.isArray(skills)
+      ? skills
+      : typeof skills === "string"
+        ? skills.split(",").map((item) => item.trim())
+        : [];
 
     const maxVisibleTags = window.innerWidth < 640 ? 3 : 3;
     const visibleTags = skillArray.slice(0, maxVisibleTags);
@@ -77,10 +81,10 @@ export const ProfileSuggestions = ({
                 e.stopPropagation();
                 // Find the tooltip and trigger elements
                 const tooltipElement: any = e.currentTarget.querySelector(
-                  `.${styles.tooltip}`
+                  `.${styles.tooltip}`,
                 );
                 const triggerElement = e.currentTarget.querySelector(
-                  `.${styles.tooltipTrigger}`
+                  `.${styles.tooltipTrigger}`,
                 );
 
                 if (tooltipElement && triggerElement) {
@@ -109,7 +113,7 @@ export const ProfileSuggestions = ({
                 e.stopPropagation();
                 // Hide the tooltip on mouse leave
                 const tooltipElement: any = e.currentTarget.querySelector(
-                  `.${styles.tooltip}`
+                  `.${styles.tooltip}`,
                 );
                 if (tooltipElement) {
                   tooltipElement.style.display = "none";
@@ -157,7 +161,7 @@ export const ProfileSuggestions = ({
                 isCurrentlyHired,
                 id,
               },
-              index
+              index,
             ) => (
               <div
                 key={index}
@@ -224,7 +228,7 @@ export const ProfileSuggestions = ({
                   label={t("button.viewProfile")}
                 />
               </div>
-            )
+            ),
           )}
         </div>
       ) : (
@@ -245,7 +249,7 @@ export const ProfileSuggestions = ({
                   isCurrentlyHired,
                   id,
                 },
-                index
+                index,
               ) => (
                 <div
                   key={index}
@@ -358,7 +362,7 @@ export const ProfileSuggestions = ({
                     </div>
                   </div>
                 </div>
-              )
+              ),
             )
           ) : (
             <div className="flex items-center justify-center h-96 col-span-2">
