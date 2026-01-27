@@ -36,7 +36,7 @@ export const InvoicesListing = ({ title }: props) => {
   const meta = useSelector(getInvoicesMeta);
   const [search, setSearch] = useState("");
   const [selectedTab, setSelectedTab] = useState<INVOICES_STATUS | "all">(
-    "all"
+    "all",
   );
 
   const columns: any = [
@@ -93,15 +93,32 @@ export const InvoicesListing = ({ title }: props) => {
       title: t("table.column.status"),
       key: "paymentStatus",
       dataIndex: "paymentStatus",
-      render: (status: any) => (
-        <>
-          {status ? (
-            <Tag label={status} tagType={status?.toString()?.toLowerCase()} />
-          ) : (
-            "-"
-          )}
-        </>
-      ),
+      render: (status: any) => {
+        const getStatusLabel = () => {
+          switch (status) {
+            case INVOICES_STATUS.PENDING:
+              return "Pending";
+            case INVOICES_STATUS.CONFIRMATION_PENDING:
+              return "Confirmation Pending";
+            case INVOICES_STATUS.PAID:
+              return "Paid";
+            default:
+              return status;
+          }
+        };
+        return (
+          <>
+            {status ? (
+              <Tag
+                label={getStatusLabel()}
+                tagType={status?.toString()?.toLowerCase()}
+              />
+            ) : (
+              "-"
+            )}
+          </>
+        );
+      },
     },
     {
       title: t("table.column.action"),
@@ -125,7 +142,7 @@ export const InvoicesListing = ({ title }: props) => {
         cbSuccess: () => {
           cbSuccess && cbSuccess();
         },
-      })
+      }),
     );
   };
 
@@ -181,7 +198,7 @@ export const InvoicesListing = ({ title }: props) => {
     },
     {
       value: INVOICES_STATUS.PENDING,
-      label: "Awaiting payment",
+      label: "Pending",
       id: 1,
       onClick: (val: any) => {
         onChangeStatus(val);
@@ -189,7 +206,7 @@ export const InvoicesListing = ({ title }: props) => {
     },
     {
       value: INVOICES_STATUS.CONFIRMATION_PENDING,
-      label: "Payment under review",
+      label: "Confirmation Pending",
       id: 2,
       onClick: (val: any) => {
         onChangeStatus(val);
@@ -238,7 +255,10 @@ export const InvoicesListing = ({ title }: props) => {
                     </Tooltip>
                   </div>
                   <div className={styles.card_desc}>
-                    ${meta?.pendingMarginAmount ? meta?.pendingMarginAmount : "0"}
+                    $
+                    {meta?.pendingMarginAmount
+                      ? meta?.pendingMarginAmount
+                      : "0"}
                   </div>
                 </div>
               </div>
