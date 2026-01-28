@@ -312,7 +312,8 @@ export class AppService extends HttpService {
       const apiResponse = await this.post(
         `${baseAuthUrl}` + ENDPOINTS.UPLOAD_JD,
         query,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
+        30000
       );
 
       return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
