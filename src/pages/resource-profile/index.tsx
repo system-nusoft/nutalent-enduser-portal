@@ -28,7 +28,10 @@ import {
 import { getResourcesData } from "src/store/selectors/features/resources-selector";
 import RequestAppAction from "src/store/slices/app-actions";
 import { colors, getRandomColor } from "src/utils/colors";
-import { formatToMonthYear } from "src/utils/date.util";
+import {
+  formatToMonthYear,
+  formatYearsOfExperience,
+} from "src/utils/date.util";
 import styles from "./styles.module.scss";
 
 export const ResourceProfile: React.FC = () => {
@@ -60,7 +63,7 @@ export const ResourceProfile: React.FC = () => {
           cbSuccess: () => {
             setInitialLoading(false);
           },
-        })
+        }),
       );
   };
 
@@ -76,7 +79,7 @@ export const ResourceProfile: React.FC = () => {
       dispatch(
         RequestAppAction.handleSearchResourceRequest({
           query: { search: skillArray[0] ?? "" },
-        })
+        }),
       );
     }
   };
@@ -109,7 +112,7 @@ export const ResourceProfile: React.FC = () => {
           });
           setMount(true);
         },
-      })
+      }),
     );
   };
 
@@ -125,7 +128,7 @@ export const ResourceProfile: React.FC = () => {
 
   const onClickSchedule = (record: any) => {
     const path = generatePath(
-      ROUTES.SCHEDULE_INTERVIEW.replace(":id", record.id)
+      ROUTES.SCHEDULE_INTERVIEW.replace(":id", record.id),
     );
 
     navigate(path, {
@@ -142,7 +145,7 @@ export const ResourceProfile: React.FC = () => {
         cbSuccess: () => {
           fetchRerource();
         },
-      })
+      }),
     );
   };
 
@@ -182,7 +185,7 @@ export const ResourceProfile: React.FC = () => {
               navigate(ROUTES.INQUIRIES);
             }, 200);
           },
-        })
+        }),
       );
   };
 
@@ -289,11 +292,11 @@ export const ResourceProfile: React.FC = () => {
 
         if (match[2]) {
           parts.push(
-            <strong key={`bold-${index}-${partIndex++}`}>{match[2]}</strong>
+            <strong key={`bold-${index}-${partIndex++}`}>{match[2]}</strong>,
           );
         } else if (match[3]) {
           parts.push(
-            <em key={`italic-${index}-${partIndex++}`}>{match[3]}</em>
+            <em key={`italic-${index}-${partIndex++}`}>{match[3]}</em>,
           );
         }
 
@@ -310,8 +313,8 @@ export const ResourceProfile: React.FC = () => {
             <span key={`text-${index}-${i}`}>{part}</span>
           ) : (
             part
-          )
-        )
+          ),
+        ),
       );
 
       result.push(<div key={`line-${index}`}>{content}</div>);
@@ -362,9 +365,9 @@ export const ResourceProfile: React.FC = () => {
                 />
 
                 <RoundTag
-                  text={t("tag.yearsOfExperience", {
-                    years: data?.totalYearsOfExperience || 0,
-                  })}
+                  text={formatYearsOfExperience(
+                    data?.totalYearsOfExperience || 0,
+                  )}
                   // icon={<DollarCircle />}
                 />
 
@@ -454,7 +457,7 @@ export const ResourceProfile: React.FC = () => {
                                 </div>
                               </>
                             );
-                          }
+                          },
                         )}
                     </span>
                   </>
@@ -477,7 +480,8 @@ export const ResourceProfile: React.FC = () => {
 
         <DialogBox
           onClose={() => (
-            setDisabled(true), form.setFieldValue("message", null)
+            setDisabled(true),
+            form.setFieldValue("message", null)
           )}
           ref={modalRef}
         >
