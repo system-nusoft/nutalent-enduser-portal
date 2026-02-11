@@ -17,6 +17,7 @@ import { getResourcesByIdData } from "src/store/selectors/features/resource-by-i
 import RequestAppAction from "src/store/slices/app-actions";
 import { colors } from "src/utils/colors";
 import styles from "./styles.module.scss";
+import type { RuleObject } from "antd/es/form";
 export const HireResource: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -174,8 +175,19 @@ export const HireResource: React.FC = () => {
               inputType="number"
               onlyNumbers
               size="small"
+              minimum={1}
               rules={[
                 { required: true, message: t("error.weeklyHoursRequired") },
+                {
+                  validator: async (_: RuleObject, value:number) => {
+                    if (value === undefined || value === null || value <=0 ) {
+                      return Promise.reject(
+                        new Error(t("error.weeklyHoursRequired"))
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
               ]}
               onChange={() => calculateHours()}
               label={t("labels.weeklyHours")}

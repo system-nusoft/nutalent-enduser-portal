@@ -1,5 +1,5 @@
 import { ConfigProvider } from "antd";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { I18nextProvider } from "react-i18next";
 import { Provider } from "react-redux";
@@ -11,10 +11,25 @@ import { reportWebVitals } from "./reportWebVitals";
 import { Router } from "./routes";
 import reduxStore from "./store";
 import { colors } from "./utils/colors";
+import { MobileFallback } from "./components/mobile-fallback";
 
 export const { store, persistor } = reduxStore();
 
-export const App = () => (
+const MOBILE_BREAKPOINT = 1024;
+
+export const App = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  if (isMobile) return <MobileFallback />;
+
+  return (
   <React.StrictMode>
     <ErrorBoundary FallbackComponent={ErrorScreen}>
       <Provider store={store}>
@@ -50,7 +65,8 @@ export const App = () => (
       </Provider>
     </ErrorBoundary>
   </React.StrictMode>
-);
+  );
+};
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals

@@ -1,0 +1,142 @@
+@import "../../styles/colors.scss";
+
+.mobileFallback {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  padding-top: 6.25rem;
+  padding-bottom: 2.5rem;
+
+  background: radial-gradient(circle at top, $white 0%, $light-grey-background 40%, $slate 100%);
+  font-family: Inter, sans-serif;
+}
+
+.card {
+  margin: 0 auto;
+  width: 85%;
+  max-width: 26rem;
+
+  background: $white;
+  border: 0.06rem solid $border-color;
+  border-radius: 1.125rem;
+
+  padding: 1.6rem 1.3rem 2.1rem;
+  text-align: center;
+
+  box-shadow:
+    0 0.6rem 1.9rem $shadow,
+    0 1.9rem 3.8rem rgba($primary, 0.08);
+}
+
+.logo {
+  width: 10.6rem;
+  height: auto;
+  display: block;
+  margin: 0 auto 1.25rem;
+}
+
+.text {
+  margin-bottom: 6rem;
+  color: $dark-black;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.6rem;
+}
+
+.text strong {
+  font-weight: 650;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.9rem;
+
+  text-decoration: none;
+  background: $primary;
+  color: $white;
+
+  font-weight: 600;
+  font-size: 0.95rem;
+
+  box-shadow: 0 0.6rem 1.1rem rgba($primary, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.button:hover {
+  filter: brightness(0.98);
+}
+
+.button:active {
+  transform: translateY(0.06rem);
+}
+
+.bottom {
+  margin-top: auto;
+  padding: 1.2rem 1.25rem 1.4rem;
+  text-align: center;
+
+  color: $light-text;
+  font-size: 0.85rem;
+}
+
+.bottomLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.nusoftLink {
+  color: $light-text;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.nusoftLink:hover {
+  opacity: 0.85;
+}
+
+.bottomLinks a {
+  color: $dark-black;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.bottomLinks a:hover {
+  text-decoration: underline;
+}
+
+.copy {
+  margin-bottom: 0.75rem;
+  color: $light-text;
+}
+
+.social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.linkedin {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+
+  background: $dark-black;
+  color: $white;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+  font-weight: 700;
+}

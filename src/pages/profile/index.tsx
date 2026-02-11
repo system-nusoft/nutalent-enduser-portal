@@ -94,7 +94,7 @@ export const Profile = ({ title }: props) => {
     if (!passwordInfo.currentPassword) {
       newErrors.currentPassword = t("error.fieldIsRequired").replace(
         "{field}",
-        "Current Password"
+        "Current Password",
       );
       valid = false;
     } else {
@@ -104,7 +104,7 @@ export const Profile = ({ title }: props) => {
     if (!passwordInfo.newPassword) {
       newErrors.newPassword = t("error.fieldIsRequired").replace(
         "{field}",
-        "New Password"
+        "New Password",
       );
       valid = false;
     } else {
@@ -151,7 +151,7 @@ export const Profile = ({ title }: props) => {
           setActiveTab(null);
           dispatch(RequestAppAction.handleGetUser());
         },
-      })
+      }),
     );
   };
 
@@ -202,7 +202,14 @@ export const Profile = ({ title }: props) => {
                 value={personalInfo.firstName}
                 onChange={handlePersonalInfoChange}
                 error={personalInfoErrors.name}
-                rules={[{ required: true, message: t("error.nameRequired") }]}
+                rules={[
+                  { required: true, message: t("error.nameRequired") },
+                  {
+                    pattern: /^[a-zA-Z\s'-]+$/,
+                    message:
+                      "First name can only contain letters, spaces, hyphens, and apostrophes",
+                  },
+                ]}
               />
               <Input
                 size="large"
@@ -212,7 +219,14 @@ export const Profile = ({ title }: props) => {
                 value={personalInfo.lastName}
                 onChange={handlePersonalInfoChange}
                 error={personalInfoErrors.name}
-                rules={[{ required: true, message: t("error.nameRequired") }]}
+                rules={[
+                  { required: true, message: t("error.nameRequired") },
+                  {
+                    pattern: /^[a-zA-Z\s'-]+$/,
+                    message:
+                      "Last name can only contain letters, spaces, hyphens, and apostrophes",
+                  },
+                ]}
               />
               <div className="col-span-2">
                 <div className="grid grid-cols-2 gap-4">
