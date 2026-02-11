@@ -9,7 +9,7 @@ export const MobileFallback = () => {
         <img className={styles.logo} src={logo} alt="nuTalent" />
 
         <p className={styles.text}>
-          <strong>This application is only supported on desktop devices.</strong>
+          This application is only supported on desktop devices.
           <br />
           <br />
           To proceed, please switch to a PC or laptop device.
