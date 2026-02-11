@@ -1,0 +1,141 @@
+.mobileFallback {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  padding-top: 100px;
+  padding-bottom: 40px;
+
+  background: radial-gradient(circle at top, #ffffff 0%, #eef2f8 40%, #e6ebf3 100%);
+  font-family: Inter, sans-serif;
+}
+
+.card {
+  margin: 0 auto;
+  width: calc(100% - 48px);
+  max-width: 420px;
+
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
+
+  padding: 26px 22px 34px;
+  text-align: center;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.06),
+    0 30px 60px rgba(22, 76, 163, 0.08);
+}
+
+.logo {
+  width: 170px;
+  height: auto;
+  display: block;
+  margin: 0 auto 18px;
+}
+
+.text {
+  margin: 0 0 18px;
+  color: #1b1b1b;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.6rem;
+}
+
+.text strong {
+  font-weight: 650;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px 20px;
+  border-radius: 14px;
+
+  text-decoration: none;
+  background: #164CA3;
+  color: #F3F6FA;
+
+  font-weight: 600;
+  font-size: 0.95rem;
+
+  box-shadow: 0 10px 18px rgba(22, 76, 163, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(22, 76, 163, 0.35);
+  filter: brightness(0.98);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.bottom {
+  margin-top: auto;
+  padding: 18px 20px 22px;
+  text-align: center;
+
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.bottomLinks {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.nusoftLink {
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.nusoftLink:hover {
+  opacity: 0.85;
+}
+
+.bottomLinks a {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.bottomLinks a:hover {
+  text-decoration: underline;
+}
+
+.copy {
+  margin-bottom: 12px;
+  color: #6b7280;
+}
+
+.social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.linkedin {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+
+  background: #111827;
+  color: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+  font-weight: 700;
+}
