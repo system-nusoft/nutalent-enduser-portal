@@ -177,13 +177,14 @@ export const HireResource: React.FC = () => {
               size="small"
               minimum={1}
               rules={[
-                { required: true, message: t("error.weeklyHoursRequired") },
+                //{ required: true, message: t("error.weeklyHoursRequired") },
                 {
-                  validator: async (_: RuleObject, value:number) => {
-                    if (value === undefined || value === null || value <=0 ) {
-                      return Promise.reject(
-                        new Error(t("error.weeklyHoursRequired"))
-                      );
+                  validator: async (_: RuleObject, value: number) => {
+                    if (value === undefined || value === null || value === ("" as any)) {
+                      return Promise.reject(new Error(t("error.weeklyHoursRequired")));
+                    }
+                    if (Number(value) <= 0) {
+                      return Promise.reject(new Error(t("error.weeklyHoursMustBePositive")));
                     }
                     return Promise.resolve();
                   },
