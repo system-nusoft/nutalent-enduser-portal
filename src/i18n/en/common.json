@@ -90,6 +90,7 @@
     "nameRequired": "Name is required.",
     "hiringDurationRequired": "Hiring duration is required.",
     "weeklyHoursRequired": "Weekly hours required.",
+    "weeklyHoursMustBePositive": "Weekly hours must be positive",
     "endDateRequired": "End date is required.",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
