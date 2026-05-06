@@ -14,7 +14,7 @@ const ENDPOINTS = {
   PROJECT_BY_ID_ADD_RESOURCE: (id: string) =>
     `project/${id}/resource-engagement/add`,
   END_USER_ENGAGEMENTS: `end-user/resource-engagement`,
-  HIRE_ENAGEMENT: (resourceId: string) => `resource/${resourceId}/engagement`,
+  HIRE_ENGAGEMENT: (resourceId: string) => `resource/${resourceId}/engagement`,
   RESOURCE_BY_ID: (resourceId: string) =>
     `end-user/search-resource/${resourceId}`,
   INTERVIEW: `schedule-interview`,
@@ -49,6 +49,10 @@ const ENDPOINTS = {
   CONFIGURATIONS: (id: string) => `end-user/${id}/configurations`,
   ALL_ENGAGEMENTS: () => `engagement`,
   PATCH_ENGAGEMENTS: (id: string) => `engagement/${id}/status`,
+  AI_IDENTIFY_ROLES: `ai/identify-roles`,
+  AI_REWRITE_TIMESHEET: `ai/rewrite-timesheet`,
+  AI_TIMESHEET_SUGGESTIONS: (timesheetId: string) => `ai/timesheet-suggestions/${timesheetId}`,
+  AI_SAVE_SUMMARY: `ai/save-ai-summary`,
 };
 
 export default ENDPOINTS;

@@ -7,10 +7,21 @@ import ForgotPassword from "src/pages/forgot-password";
 import ProfileSetup from "src/pages/profile-setup";
 import ResetPassword from "src/pages/reset-password";
 import { getIsLoggedIn } from "src/store/selectors/entities/auth";
+import { AIChatbot } from "src/components/ai-chatbot";
 
 export function isArrayWithLength(arr: TArrayOfObjects) {
   return Array.isArray(arr) && arr.length;
 }
+
+// Dashboard wrapper component that includes the chatbot
+const DashboardWrapper: React.FC = () => {
+  return (
+    <>
+      <Dashboard />
+      <AIChatbot />
+    </>
+  );
+};
 
 export const Router: React.FC = () => {
   const isLoggedIn = useSelector(getIsLoggedIn);
@@ -20,7 +31,7 @@ export const Router: React.FC = () => {
       <Routes>
         {isLoggedIn ? (
           <>
-            <Route path="/*" element={<Dashboard />} />
+            <Route path="/*" element={<DashboardWrapper />} />
           </>
         ) : (
           <>

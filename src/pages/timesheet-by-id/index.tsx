@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AlertTriangle, TickGreen } from "src/assets";
-import { Button, Input, Table, Tag } from "src/components";
+import { Button, Input, Table, Tag, TimesheetAIRewriterModal } from "src/components";
 import { DialogBox } from "src/components/modal/Modal";
 import { PrivatePageTemplate } from "src/components/private-page-template/PrivatePageTemplate";
 import { ROUTES } from "src/constants/navigation-routes";
@@ -15,6 +15,7 @@ import {
 } from "src/store/selectors/features/timesheet-selector";
 import RequestAppAction from "src/store/slices/app-actions";
 import { modalProps, TIMESHEET_STATUS } from "src/utils/enum";
+import { AISummaryStorage } from "src/utils/ai-summary-storage";
 import styles from "./styles.module.scss";
 interface props {
   title: string;
@@ -41,6 +42,7 @@ export const ViewTimesheet = ({}: props) => {
   const dispatch = useDispatch();
   const [inputComments, setInputComments] = useState("");
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [generatedSummary, setGeneratedSummary] = useState("");
 
   useEffect(() => {
     dispatch(
@@ -51,7 +53,18 @@ export const ViewTimesheet = ({}: props) => {
         },
       })
     );
-  }, []);
+
+    // Load persisted AI summary from localStorage
+    if (timesheetId) {
+      const persistedSummary = AISummaryStorage.getSummary(timesheetId);
+      if (persistedSummary) {
+        setGeneratedSummary(persistedSummary.aiGeneratedSummary);
+      }
+      
+      // Clean up expired summaries on mount
+      AISummaryStorage.clearExpiredSummaries();
+    }
+  }, [timesheetId, dispatch]);
 
   const columns: any = [
     {
@@ -175,9 +188,9 @@ export const ViewTimesheet = ({}: props) => {
         backBtn
         buttons={!isLoading && buttons?.length > 0 ? buttons : false}
       >
-        <div className="grid grid-cols-8  gap-4">
+        <div className="grid grid-cols-12 gap-4 max-h-[calc(100vh-200px)]">
           <>
-            <div className="flex col-span-6 flex-col">
+            <div className="flex col-span-8 flex-col overflow-y-auto">
               <div className={`${styles.card_container}`}>
                 <div className="py-5 px-4">
                   <div className="flex items-center gap-2">
@@ -220,7 +233,7 @@ export const ViewTimesheet = ({}: props) => {
             </div>
           </>
           <>
-            <div className="flex flex-col gap-5 grid-cols-4 col-span-2">
+            <div className="flex flex-col gap-3 grid-cols-4 col-span-4 overflow-y-auto max-h-[calc(100vh-200px)]">
               <div className="white-container  w-full col-span-2">
                 <div className="flex flex-col gap-2 justify-between">
                   <div className="flex flex-col gap-2">
@@ -302,6 +315,55 @@ export const ViewTimesheet = ({}: props) => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+<div className="white-container w-full col-span-2">
+                <div className="flex flex-col gap-4">
+                  {/* AI Section Header */}
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <span className="text-2xl">✨</span>
+                    <h3 className="text-lg font-semibold text-gray-800">AI-Powered Summary Enhancement</h3>
+                  </div>
+
+                  {/* AI Rewriter Button */}
+                  <TimesheetAIRewriterModal
+                    initialSummary={
+                      Array.isArray(timesheetData?.TimesheetRevision)
+                        ? timesheetData?.TimesheetRevision[0]?.notes || ""
+                        : ""
+                    }
+                    timesheetId={timesheetId || undefined}
+                    onSummaryGenerated={(summary) => setGeneratedSummary(summary)}
+                  />
+                  
+                  {/* Generated Summary Card with AI Styling */}
+                  {generatedSummary && (
+                    <div className="relative overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 shadow-sm">
+                      {/* AI Badge */}
+                      <div className="absolute top-3 right-3">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-sm">
+                          <span>✨</span>
+                          AI Generated
+                        </span>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-5 pt-12">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-1 h-6 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                          <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Enhanced Summary</h4>
+                        </div>
+                        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-indigo-100">
+                          <p className="text-gray-800 leading-relaxed">{generatedSummary}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Decorative Elements */}
+                      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-purple-200/30 to-transparent rounded-tl-full"></div>
+                      <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-indigo-200/30 to-transparent rounded-br-full"></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
