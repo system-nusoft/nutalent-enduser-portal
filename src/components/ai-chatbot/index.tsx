@@ -38,18 +38,18 @@ export const AIChatbot: React.FC = () => {
       const elapsed = Date.now() - loadingStartTime;
       const seconds = Math.floor(elapsed / 1000);
       
-      let message = '🤔 Analyzing your project requirements and generating optimal team recommendations...';
+      let message = 'Analyzing your project requirements and generating optimal team recommendations...';
       
       if (seconds >= 10) {
-        message = '🧠 Deep learning analysis in progress... This may take up to 30 seconds for complex projects.';
+        message = 'Deep learning analysis in progress... This may take up to 30 seconds for complex projects.';
       }
       
       if (seconds >= 20) {
-        message = '⚡ Processing complex requirements and optimizing team composition... Almost there!';
+        message = 'Processing complex requirements and optimizing team composition... Almost there!';
       }
       
       if (seconds >= 30) {
-        message = '🎯 Finalizing recommendations and ensuring optimal team structure...';
+        message = 'Finalizing recommendations and ensuring optimal team structure...';
       }
 
       setMessages(prev => prev.map(msg => 
@@ -65,21 +65,10 @@ export const AIChatbot: React.FC = () => {
   }, [messages]);
 
   
-  const extractRequirements = (text: string): string[] => {
-    const keywords = [
-      'React', 'Angular', 'Vue', 'Next.js', 'Nuxt.js',
-      'Node.js', 'Python', 'Java', 'C#', '.NET', 'PHP', 'Ruby', 'Go',
-      'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'Elasticsearch',
-      'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes',
-      'mobile', 'web', 'API', 'REST', 'GraphQL',
-      'blockchain', 'AI', 'ML', 'machine learning', 'data science',
-      'React Native', 'Flutter', 'iOS', 'Android',
-      'TypeScript', 'JavaScript', 'Solidity', 'Rust'
-    ];
-    
-    return keywords.filter(keyword => 
-      text.toLowerCase().includes(keyword.toLowerCase())
-    );
+  const extractRequirements = (): string[] => {
+    // Keywords should be extracted from backend configuration
+    // For now, return empty array and let backend handle requirement extraction
+    return [];
   };
 
   const formatRolesResponse = (roles: Role[], totalTeamSize: number, phasing?: string, considerations?: string[]): string => {
@@ -94,11 +83,11 @@ export const AIChatbot: React.FC = () => {
     });
 
     if (phasing) {
-      response += `\n📅 Recommended Phasing:\n${phasing}\n`;
+      response += `\nRecommended Phasing:\n${phasing}\n`;
     }
 
     if (considerations && Array.isArray(considerations) && considerations.length > 0) {
-      response += `\n💡 Key Considerations:\n`;
+      response += `\nKey Considerations:\n`;
       considerations.forEach(consideration => {
         response += `• ${consideration}\n`;
       });
@@ -125,7 +114,7 @@ export const AIChatbot: React.FC = () => {
 
     const loadingMessage: Message = {
       role: MessageRole.ASSISTANT,
-      content: '🤔 Analyzing your project requirements and generating optimal team recommendations...',
+      content: 'Analyzing your project requirements and generating optimal team recommendations...',
       timestamp: new Date(),
       isLoading: true
     };
@@ -133,7 +122,7 @@ export const AIChatbot: React.FC = () => {
 
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL || '';
-      const extractedReqs = extractRequirements(input);
+      const extractedReqs = extractRequirements();
       const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
 
       const requestData: IdentifyRolesRequest = {

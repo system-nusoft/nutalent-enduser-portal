@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { AiService } from 'src/services/ai';
 import { Button, Input } from 'src/components';
+import { Select } from 'antd';
 import { DialogBox } from 'src/components/modal/Modal';
 import { modalProps } from 'src/utils/enum';
 import { AISummaryStorage } from 'src/utils/ai-summary-storage';
@@ -275,15 +276,17 @@ export const TimesheetAIRewriterModal = ({
 
               <div className={styles.inputSection}>
                 <label className={styles.label}>Tone</label>
-                <select
+                <Select
                   className={styles.select}
                   value={tone}
-                  onChange={(e) => setTone(e.target.value as Tone)}
-                >
-                  <option value={Tone.PROFESSIONAL}>Professional</option>
-                  <option value={Tone.TECHNICAL}>Technical</option>
-                  <option value={Tone.CONCISE}>Concise</option>
-                </select>
+                  onChange={(value) => setTone(value as Tone)}
+                  options={[
+                    { value: Tone.PROFESSIONAL, label: 'Professional' },
+                    { value: Tone.TECHNICAL, label: 'Technical' },
+                    { value: Tone.CONCISE, label: 'Concise' }
+                  ]}
+                  size="small"
+                />
               </div>
             </div>
 
