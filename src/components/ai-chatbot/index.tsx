@@ -125,9 +125,11 @@ export const AIChatbot: React.FC = () => {
       const extractedReqs = extractRequirements();
       const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
 
+      const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
+
       const requestData: IdentifyRolesRequest = {
         projectDescription: input,
-        requirements: allRequirements,
+        requirements: finalRequirements,
         budget: budget || undefined,
         timeline: timeline || undefined
       };

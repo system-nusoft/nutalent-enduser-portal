@@ -277,7 +277,6 @@ export const TimesheetAIRewriterModal = ({
               <div className={styles.inputSection}>
                 <label className={styles.label}>Tone</label>
                 <Select
-                  className={styles.select}
                   value={tone}
                   onChange={(value) => setTone(value as Tone)}
                   options={[
@@ -286,6 +285,11 @@ export const TimesheetAIRewriterModal = ({
                     { value: Tone.CONCISE, label: 'Concise' }
                   ]}
                   size="small"
+                  style={{
+                    width: '100%',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}
                 />
               </div>
             </div>
