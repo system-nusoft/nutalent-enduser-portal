@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AiService, IdentifyRolesRequest, Role } from 'src/services/ai';
+import { useNavigate } from 'react-router-dom';
+import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role } from 'src/services/ai';
+import { ResourceCard } from './ResourceCard';
+import { ROUTES } from 'src/constants/navigation-routes';
 import styles from './styles.module.scss';
 
 enum MessageRole {
@@ -12,9 +15,11 @@ interface Message {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
+  rolesWithResources?: RoleWithResources[];
 }
 
 export const AIChatbot: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -38,18 +43,18 @@ export const AIChatbot: React.FC = () => {
       const elapsed = Date.now() - loadingStartTime;
       const seconds = Math.floor(elapsed / 1000);
       
-      let message = 'Analyzing your project requirements and generating optimal team recommendations...';
+      let message = 'Analyzing your project requirements and matching available resources...';
+      
+      if (seconds >= 5) {
+        message = 'Finding the best-matched talent from our database... Almost there!';
+      }
       
       if (seconds >= 10) {
-        message = 'Deep learning analysis in progress... This may take up to 30 seconds for complex projects.';
+        message = 'Calculating match scores and finalizing recommendations...';
       }
       
-      if (seconds >= 20) {
-        message = 'Processing complex requirements and optimizing team composition... Almost there!';
-      }
-      
-      if (seconds >= 30) {
-        message = 'Finalizing recommendations and ensuring optimal team structure...';
+      if (seconds >= 15) {
+        message = 'Preparing resource cards with detailed profiles...';
       }
 
       setMessages(prev => prev.map(msg => 
@@ -69,6 +74,19 @@ export const AIChatbot: React.FC = () => {
     // Keywords should be extracted from backend configuration
     // For now, return empty array and let backend handle requirement extraction
     return [];
+  };
+
+  // Resource action handlers
+  const handleScheduleInterview = (resourceId: string) => {
+    navigate(`${ROUTES.SCHEDULE_INTERVIEW}?resourceId=${resourceId}`);
+  };
+
+  const handleViewTimesheet = (resourceId: string) => {
+    navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+  };
+
+  const handleViewInvoices = (resourceId: string) => {
+    navigate(`${ROUTES.INVOICES}?resourceId=${resourceId}`);
   };
 
   const formatRolesResponse = (roles: Role[], totalTeamSize: number, phasing?: string, considerations?: string[]): string => {
@@ -114,7 +132,7 @@ export const AIChatbot: React.FC = () => {
 
     const loadingMessage: Message = {
       role: MessageRole.ASSISTANT,
-      content: 'Analyzing your project requirements and generating optimal team recommendations...',
+      content: 'Analyzing your project requirements and matching available resources...',
       timestamp: new Date(),
       isLoading: true
     };
@@ -134,21 +152,26 @@ export const AIChatbot: React.FC = () => {
         timeline: timeline || undefined
       };
 
-      const response: any = await aiService.identifyRoles(baseUrl, requestData);
+      // Use quick endpoint for faster response with resource matching
+      const response: any = await aiService.identifyRolesQuick(baseUrl, requestData);
 
       setMessages(prev => prev.filter(msg => !msg.isLoading));
 
       
-      // Safety checks for response data - AI service unwraps response in prepareResponseObject
-      const roles = response?.roles || [];
-      const teamSize = response?.totalEstimatedTeamSize ?? roles.length;
-      const phasing = response?.recommendedPhasing;
-      const considerations = response?.keyConsiderations || [];
+      // Safety checks for response data - Quick endpoint returns roles with resources
+      const rolesWithResources = response?.roles || [];
+      const teamSize = response?.totalEstimatedTeamSize ?? rolesWithResources.length;
+      const totalResources = response?.totalMatchingResources ?? 0;
+
+      // Create summary message
+      let summaryContent = `Based on your requirements, I found ${teamSize} recommended ${teamSize === 1 ? 'role' : 'roles'} with ${totalResources} matching ${totalResources === 1 ? 'resource' : 'resources'} from our database.\n\n`;
+      summaryContent += `Showing real-time talent matched to your needs with availability and match scores.`;
 
       const assistantMessage: Message = {
         role: MessageRole.ASSISTANT,
-        content: formatRolesResponse(roles, teamSize, phasing, considerations),
-        timestamp: new Date()
+        content: summaryContent,
+        timestamp: new Date(),
+        rolesWithResources: rolesWithResources
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -174,7 +197,7 @@ export const AIChatbot: React.FC = () => {
     }
   };
 
-  const startNewChat = () => {
+  const handleReset = () => {
     setMessages([]);
     setInput('');
     setRequirements([]);
@@ -196,13 +219,6 @@ export const AIChatbot: React.FC = () => {
             </div>
             <div className={styles.headerActions}>
               <button 
-                onClick={startNewChat}
-                className={styles.iconButton}
-                title="New Chat"
-              >
-                ➕
-              </button>
-              <button 
                 onClick={() => setIsOpen(false)}
                 className={styles.closeButton}
               >
@@ -215,7 +231,7 @@ export const AIChatbot: React.FC = () => {
           <div className={styles.messagesContainer}>
             {messages.length === 0 ? (
               <div className={styles.welcomeScreen}>
-                <div className={styles.welcomeIcon}>🚀</div>
+                {/* <div className={styles.welcomeIcon}>AI</div> */}
                 <h2>Welcome to AI Role Advisor!</h2>
                 <p>Describe your project and I'll recommend the perfect team composition.</p>
                 <div className={styles.exampleQueries}>
@@ -239,32 +255,6 @@ export const AIChatbot: React.FC = () => {
                     "E-commerce platform with React and Node.js"
                   </div>
                 </div>
-
-                <div className={styles.staticRoles}>
-                  <p><strong>Available Roles:</strong></p>
-                  <div className={styles.rolesGrid}>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Mobile App Developer</div>
-                      <div className={styles.roleSkills}>React Native, Flutter, Mobile UI</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Backend Developer</div>
-                      <div className={styles.roleSkills}>Node.js, MongoDB, REST API</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>UI/UX Designer</div>
-                      <div className={styles.roleSkills}>Mobile Design, Fitness App UX</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Social Features Developer</div>
-                      <div className={styles.roleSkills}>Real-time Communication, Social APIs</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>QA Engineer</div>
-                      <div className={styles.roleSkills}>Testing, Quality Assurance</div>
-                    </div>
-                  </div>
-                </div>
               </div>
             ) : (
               messages.map((msg, idx) => (
@@ -280,17 +270,62 @@ export const AIChatbot: React.FC = () => {
                         <span></span>
                       </div>
                     ) : (
-                      <div className={styles.messageText}>
-                        {msg.content.split('\n').map((line, i) => {
-                          if (line.startsWith('**') && line.endsWith('**')) {
-                            return <strong key={i}>{line.replace(/\*\*/g, '')}<br /></strong>;
-                          }
-                          if (line.startsWith('•')) {
-                            return <div key={i} className={styles.bulletPoint}>{line}<br /></div>;
-                          }
-                          return <span key={i}>{line}<br /></span>;
-                        })}
-                      </div>
+                      <>
+                        <div className={styles.messageText}>
+                          {msg.content.split('\n').map((line, i) => {
+                            if (line.startsWith('**') && line.endsWith('**')) {
+                              return <strong key={i}>{line.replace(/\*\*/g, '')}<br /></strong>;
+                            }
+                            if (line.startsWith('•')) {
+                              return <div key={i} className={styles.bulletPoint}>{line}<br /></div>;
+                            }
+                            return <span key={i}>{line}<br /></span>;
+                          })}
+                        </div>
+                        
+                        {/* Render resource cards if available */}
+                        {msg.rolesWithResources && msg.rolesWithResources.length > 0 && (
+                          <div className={styles.rolesContainer}>
+                            {msg.rolesWithResources.map((roleWithRes, roleIdx) => (
+                              <div key={roleIdx} className={styles.roleSection}>
+                                <div className={styles.roleHeader}>
+                                  <h4 className={styles.roleTitle}>
+                                    {roleWithRes.role.title} ({roleWithRes.role.seniorityLevel})
+                                  </h4>
+                                  <span className={styles.rolePriority}>
+                                    {roleWithRes.role.priority}
+                                  </span>
+                                </div>
+                                <p className={styles.roleReasoning}>{roleWithRes.role.reasoning}</p>
+                                <div className={styles.roleSkills}>
+                                  <strong>Required Skills:</strong> {roleWithRes.role.skills.join(', ')}
+                                </div>
+                                
+                                {roleWithRes.matchingResources.length > 0 ? (
+                                  <div className={styles.matchingResourcesSection}>
+                                    <h5 className={styles.matchingSectionTitle}>
+                                      {roleWithRes.matchingResources.length} Matching {roleWithRes.matchingResources.length === 1 ? 'Resource' : 'Resources'}
+                                    </h5>
+                                    {roleWithRes.matchingResources.map((resource) => (
+                                      <ResourceCard
+                                        key={resource.id}
+                                        resource={resource}
+                                        onScheduleInterview={handleScheduleInterview}
+                                        onViewTimesheet={handleViewTimesheet}
+                                        onViewInvoices={handleViewInvoices}
+                                      />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className={styles.noResources}>
+                                    No matching resources found for this role.
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className={styles.timestamp}>
@@ -303,6 +338,17 @@ export const AIChatbot: React.FC = () => {
           </div>
 
           <div className={styles.inputArea}>
+            {messages.length > 0 && (
+              <div className={styles.newChatButtonContainer}>
+                <button 
+                  onClick={handleReset}
+                  className={styles.newChatButton}
+                  title="Start New Chat"
+                >
+                  New Chat
+                </button>
+              </div>
+            )}
             <div className={styles.optionalFields}>
               <input
                 type="text"
@@ -334,7 +380,7 @@ export const AIChatbot: React.FC = () => {
                 disabled={loading || !input.trim()}
                 className={styles.sendButton}
               >
-                {loading ? '⏳' : '🚀'} {loading ? 'Analyzing...' : 'Get Recommendations'}
+                {loading ? 'Analyzing...' : 'Get Recommendations'}
               </button>
             </form>
           </div>

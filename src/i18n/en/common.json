@@ -298,6 +298,7 @@
     "endDate": "End Date",
     "startDate": "Start Date",
     "commentsFrom": "Revision Notes",
+    "taskSummary": "Task Summary",
     "monthlyHours": "Monthly Hours",
     "monthlyRate": "Monthly Rate",
     "hiredResources": "Hired Resources",
