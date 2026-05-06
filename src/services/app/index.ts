@@ -167,7 +167,7 @@ export class AppService extends HttpService {
   ): Promise<any> => {
     try {
       const apiResponse = await this.post(
-        `${baseAuthUrl}` + ENDPOINTS.HIRE_ENAGEMENT(id),
+        `${baseAuthUrl}` + ENDPOINTS.HIRE_ENGAGEMENT(id),
         data
       );
 
