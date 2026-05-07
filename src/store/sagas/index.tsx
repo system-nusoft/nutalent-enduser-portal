@@ -23,6 +23,7 @@ import { watchGetTimesheetById } from "./get-timesheet-by-id-saga";
 import { watchGetTimesheetListing } from "./get-timesheet-listing-saga";
 import { watchGetUser } from "./get-user-saga";
 import { watchGetInterviewDetails } from "./interview-schedule-saga";
+import { watchGetSmartSchedulerSlots } from "./smart-scheduler.saga"; 
 import { watchLogin } from "./login-saga";
 import { watchFetchPatchEngagements } from "./patch-engagements-saga";
 import { watchPatchInvoice } from "./patch-invoice-saga";
@@ -67,6 +68,7 @@ export default function* rootSaga() {
     watchReadMessages(),
     watchGetInquires(),
     watchGetInterviewDetails(),
+    watchGetSmartSchedulerSlots(),
     watchPostUploadJd(),
     watchGetElasticSearch(),
     watchUpdateInterview(),

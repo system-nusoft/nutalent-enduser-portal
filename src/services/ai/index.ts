@@ -31,6 +31,56 @@ export interface IdentifyRolesResponse {
   keyConsiderations: string[];
 }
 
+export interface ResourceProfile {
+  id: string;
+  name: string;
+  title: string;
+  hourlyRate: number;
+  totalYearsOfExperience: number;
+  derivedLevel: string;
+  profileSummary: string;
+  skills: string;
+  availability: string;
+  profilePicture: string | null;
+}
+
+export interface LevelResult {
+  level: string;
+  marketRate: { min: number; avg: number; max: number };
+  detectedRegion: string;
+  ourRates: { min: number; avg: number; max: number };
+  isCheaper: boolean;
+  savings: number | null;
+  savingsPercent: number;
+  resourceCount: number;
+  resources: ResourceProfile[];
+}
+
+export interface PricingResult {
+  role: string;
+  userLocation: string;
+  detectedRegion: string;
+  levelResults: LevelResult[];
+  totalAvailable: number;
+  responseMessage: string;
+}
+
+export interface OptimizePricingRequest {
+  roles: string[];
+  location?: string;
+  budget?: number;
+}
+
+export interface OptimizePricingResponse {
+  results: PricingResult[];
+}
+
+export interface IntentClassification {
+  intent: 'pricing' | 'role_identification' | 'unknown';
+  roles: string[];
+  confidence: number;
+}
+
 export interface RewriteTimesheetRequest {
   originalSummary: string;
   additionalContext?: string;
@@ -107,6 +157,71 @@ export class AiService extends HttpService {
         throw new Error('Invalid response: roles array is required');
       }
       
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async classifyIntent(
+    baseUrl: string,
+    query: string
+  ): Promise<IntentClassification> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+
+    if (!query?.trim()) {
+      throw new Error('Query is required');
+    }
+
+    try {
+      const apiResponse = await this.post(
+        `${baseUrl}ai/classify-intent`,
+        { query },
+        undefined,
+        30000
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
+
+      if (!responseData?.intent) {
+        throw new Error('Invalid response: intent is required');
+      }
+
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async optimizePricing(
+    baseUrl: string,
+    payload: OptimizePricingRequest
+  ): Promise<OptimizePricingResponse> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+
+    if (!payload?.roles || payload.roles.length === 0) {
+      throw new Error('At least one role is required');
+    }
+
+    try {
+      // Pricing involves multiple Gemini calls + DB lookups, give it 60s
+      const apiResponse = await this.post(
+        `${baseUrl}ai/optimize-pricing`,
+        payload,
+        undefined,
+        60000
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
+
+      if (!responseData?.results || !Array.isArray(responseData.results)) {
+        throw new Error('Invalid response: results array is required');
+      }
+
       return responseData;
     } catch (error) {
       throw prepareErrorResponse(error);

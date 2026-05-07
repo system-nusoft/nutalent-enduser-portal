@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AiService, IdentifyRolesRequest, Role } from 'src/services/ai';
+import { AiService, IdentifyRolesRequest, Role, PricingResult } from 'src/services/ai';
 import styles from './styles.module.scss';
 
 enum MessageRole {
@@ -12,6 +12,7 @@ interface Message {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
+  pricingData?: PricingResult[];
 }
 
 export const AIChatbot: React.FC = () => {
@@ -24,6 +25,8 @@ export const AIChatbot: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userLocation, setUserLocation] = useState<string>('Global');
+  const [locationFetched, setLocationFetched] = useState(false);
   const aiService = new AiService();
 
   const scrollToBottom = () => {
@@ -96,6 +99,67 @@ export const AIChatbot: React.FC = () => {
     return response;
   };
 
+  // Reverse-geocode lat/lng → country name using a free public API
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=3`
+      );
+      const data = await res.json();
+      return data?.address?.country || 'Global';
+    } catch {
+      return 'Global';
+    }
+  };
+
+  // IP-based fallback when browser geolocation is denied/unavailable
+  const fetchLocationByIP = async (): Promise<string> => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      return data?.country_name || 'Global';
+    } catch {
+      return 'Global';
+    }
+  };
+
+  const fetchUserLocation = async () => {
+    if (locationFetched) return;
+
+    // Try browser geolocation first (most accurate)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const country = await reverseGeocode(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          setUserLocation(country);
+          setLocationFetched(true);
+        },
+        async () => {
+          // User denied or geolocation failed -> fall back to IP lookup
+          const country = await fetchLocationByIP();
+          setUserLocation(country);
+          setLocationFetched(true);
+        },
+        { timeout: 5000, maximumAge: 600000 }
+      );
+    } else {
+      const country = await fetchLocationByIP();
+      setUserLocation(country);
+      setLocationFetched(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && !locationFetched) {
+      fetchUserLocation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, locationFetched]);
+
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
@@ -122,36 +186,76 @@ export const AIChatbot: React.FC = () => {
 
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL || '';
-      const extractedReqs = extractRequirements();
-      const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
+      const currentInput = userMessage.content;
 
-      const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
+      // Step 1: classify intent + extract roles via Gemini
+      console.log('[chatbot] Calling classifyIntent with:', currentInput);
+      const classification = await aiService.classifyIntent(baseUrl, currentInput);
+      console.log('[chatbot] Classification result:', classification);
 
-      const requestData: IdentifyRolesRequest = {
-        projectDescription: input,
-        requirements: finalRequirements,
-        budget: budget || undefined,
-        timeline: timeline || undefined
-      };
+      // Step 2: route based on intent
+      if (classification.intent === 'pricing' && classification.roles.length > 0) {
+         console.log('[chatbot] → pricing flow, roles:', classification.roles);
+        const response = await aiService.optimizePricing(baseUrl, {
+          roles: classification.roles,
+          location: userLocation,
+          budget: budget ? parseFloat(budget.replace(/[^0-9.]/g, '')) || undefined : undefined,
+        });
 
-      const response: any = await aiService.identifyRoles(baseUrl, requestData);
+        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: MessageRole.ASSISTANT,
+            content: '',
+            timestamp: new Date(),
+            pricingData: response.results,
+          },
+        ]);
+      } else if (classification.intent === 'role_identification') {
+        // Existing flow — unchanged
+        const extractedReqs = extractRequirements();
+        const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
+        const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
 
-      setMessages(prev => prev.filter(msg => !msg.isLoading));
+        const requestData: IdentifyRolesRequest = {
+          projectDescription: currentInput,
+          requirements: finalRequirements,
+          budget: budget || undefined,
+          timeline: timeline || undefined,
+        };
 
-      
-      // Safety checks for response data - AI service unwraps response in prepareResponseObject
-      const roles = response?.roles || [];
-      const teamSize = response?.totalEstimatedTeamSize ?? roles.length;
-      const phasing = response?.recommendedPhasing;
-      const considerations = response?.keyConsiderations || [];
+        const response: any = await aiService.identifyRoles(baseUrl, requestData);
+        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
 
-      const assistantMessage: Message = {
-        role: MessageRole.ASSISTANT,
-        content: formatRolesResponse(roles, teamSize, phasing, considerations),
-        timestamp: new Date()
-      };
+        const roles = response?.roles || [];
+        const teamSize = response?.totalEstimatedTeamSize ?? roles.length;
+        const phasing = response?.recommendedPhasing;
+        const considerations = response?.keyConsiderations || [];
 
-      setMessages(prev => [...prev, assistantMessage]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: MessageRole.ASSISTANT,
+            content: formatRolesResponse(roles, teamSize, phasing, considerations),
+            timestamp: new Date(),
+          },
+        ]);
+      } else {
+        // Pricing intent without roles, or unknown
+        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: MessageRole.ASSISTANT,
+            content:
+              classification.intent === 'pricing'
+                ? "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?"
+                : "I can help you plan a project team or compare hiring rates. Try describing your project, or ask about rates for a specific role.",
+            timestamp: new Date(),
+          },
+        ]);
+      }
     } catch (error: any) {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
       
@@ -180,6 +284,113 @@ export const AIChatbot: React.FC = () => {
     setRequirements([]);
     setBudget('');
     setTimeline('');
+  };
+
+  // const renderPricingResult = (data: PricingResult[]) => (
+  const renderPricingResult = (data: PricingResult[]) => {
+    // Build a friendly intro line summarizing what we found
+    const totalResources = data.reduce((sum, r) => sum + r.totalAvailable, 0);
+    const roleNames = data.map((r) => r.role).join(', ');
+
+    const intro =
+      totalResources === 0
+        ? `I couldn't find any available resources for ${roleNames} on our platform right now.`
+        : `Here ${totalResources === 1 ? 'is' : 'are'} ${totalResources} ${
+            totalResources === 1 ? 'resource' : 'resources'
+          } we have available for ${roleNames}, with rates compared to the regional market:`;
+
+    return (
+    <div className={styles.pricingResults}>
+      <p className={styles.pricingIntro}>{intro}</p>
+      {data.map((result, idx) => (
+        <div key={idx} className={styles.pricingRole}>
+          <div className={styles.pricingRoleHeader}>
+            <strong>{result.role}</strong>
+            <span className={styles.regionBadge}> {result.detectedRegion}</span>
+          </div>
+
+          {result.levelResults.length === 0 ? (
+            <div className={styles.noResources}>
+              <p>{result.responseMessage}</p>
+            </div>
+          ) : (
+            result.levelResults.map((lr, lrIdx) => (
+              <div
+                key={lrIdx}
+                className={`${styles.levelCard} ${lr.isCheaper ? styles.cheaperCard : styles.regularCard}`}
+              >
+                <div className={styles.levelHeader}>
+                  <span className={styles.levelTitle}>{lr.level}</span>
+                  <span className={styles.resourceCount}>
+                    {lr.resourceCount} {lr.resourceCount === 1 ? 'resource' : 'resources'} available
+                  </span>
+                </div>
+
+                {/* Only show market comparison if we have a real market rate */}
+                {lr.marketRate ? (
+                  <>
+                    <div className={styles.rateRow}>
+                      <div className={styles.rateBlock}>
+                        <span className={styles.rateLabel}>Market ({lr.detectedRegion})</span>
+                        <span className={styles.rateValue}>${lr.marketRate.avg}/hr</span>
+                        <span className={styles.rateRange}>
+                          ${lr.marketRate.min}–${lr.marketRate.max}
+                        </span>
+                      </div>
+                      <div className={styles.rateBlock}>
+                        <span className={styles.rateLabel}>Our Rate</span>
+                        <span className={styles.rateValue}>${lr.ourRates.avg}/hr</span>
+                        <span className={styles.rateRange}>
+                          ${lr.ourRates.min}–${lr.ourRates.max}
+                        </span>
+                      </div>
+                    </div>
+
+                    {lr.isCheaper ? (
+                      <div className={styles.savingsBanner}>
+                        {lr.savingsPercent}% cheaper — saving ~${lr.savings}/hr
+                      </div>
+                    ) : (
+                      <div className={styles.neutralBanner}>
+                        Verified profiles available at competitive rates
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.rateBlock}>
+                    <span className={styles.rateLabel}>Our Rate</span>
+                    <span className={styles.rateValue}>${lr.ourRates.avg}/hr</span>
+                    <span className={styles.rateRange}>
+                      ${lr.ourRates.min}–${lr.ourRates.max}
+                    </span>
+                  </div>
+                )}
+
+                <div className={styles.resourceList}>
+                  {lr.resources.slice(0, 3).map((res) => (
+                    <div key={res.id} className={styles.resourceCard}>
+                      {res.profilePicture ? (
+                        <img src={res.profilePicture} alt={res.name} className={styles.avatar} />
+                      ) : (
+                        <div className={styles.avatarPlaceholder}>{res.name?.[0] || '?'}</div>
+                      )}
+                      <div className={styles.resourceInfo}>
+                        <div className={styles.resourceName}>{res.name}</div>
+                        <div className={styles.resourceTitle}>{res.title}</div>
+                        <div className={styles.resourceMeta}>
+                          ${res.hourlyRate}/hr • {res.totalYearsOfExperience}y exp
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ))}
+    </div>
+  );
   };
 
   return (
@@ -279,6 +490,8 @@ export const AIChatbot: React.FC = () => {
                         <span></span>
                         <span></span>
                       </div>
+                    ) : msg.pricingData && msg.pricingData.length > 0 ? (
+                      renderPricingResult(msg.pricingData)
                     ) : (
                       <div className={styles.messageText}>
                         {msg.content.split('\n').map((line, i) => {

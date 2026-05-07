@@ -75,3 +75,20 @@ header {
 .day.empty {
     background-color: #f0f0f0;
 }
+
+.recommended_date {
+  position: relative;
+  animation: pulse_date 1.8s ease-in-out infinite;
+  border: 0.125rem solid $date-text-color;
+  border-radius: 9999px;
+}
+
+@keyframes pulse_date {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba($date-text-color, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 0.375rem rgba($date-text-color, 0);
+  }
+}
