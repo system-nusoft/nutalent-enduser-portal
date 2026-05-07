@@ -7,14 +7,16 @@ interface ResourceCardProps {
   resource: MatchingResource;
   onScheduleInterview: (resourceId: string) => void;
   onViewTimesheet: (resourceId: string) => void;
-  onViewInvoices: (resourceId: string) => void;
+  onSendInquiry: (resourceId: string) => void;
+  onViewDetails: (resourceId: string) => void;
 }
 
 export const ResourceCard: React.FC<ResourceCardProps> = ({
   resource,
   onScheduleInterview,
   onViewTimesheet,
-  onViewInvoices,
+  onSendInquiry,
+  onViewDetails,
 }) => {
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return '#10b981'; // Green
@@ -96,16 +98,22 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           Schedule Interview
         </button>
         <button
+          onClick={() => onViewDetails(resource.id)}
+          className={`${styles.actionBtn} ${styles.secondary}`}
+        >
+          View Details
+        </button>
+        <button
+          onClick={() => onSendInquiry(resource.id)}
+          className={`${styles.actionBtn} ${styles.secondary}`}
+        >
+          Send Inquiry
+        </button>
+        <button
           onClick={() => onViewTimesheet(resource.id)}
           className={`${styles.actionBtn} ${styles.secondary}`}
         >
           View Timesheet
-        </button>
-        <button
-          onClick={() => onViewInvoices(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-        >
-          View Invoices
         </button>
       </div>
     </div>

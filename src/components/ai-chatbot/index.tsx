@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role } from 'src/services/ai';
+import { EngagementService } from 'src/services/engagement';
 import { ResourceCard } from './ResourceCard';
 import { ROUTES } from 'src/constants/navigation-routes';
+import { Notification } from 'src/components';
 import styles from './styles.module.scss';
 
 enum MessageRole {
@@ -30,6 +32,7 @@ export const AIChatbot: React.FC = () => {
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const aiService = new AiService();
+  const engagementService = new EngagementService();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,15 +81,79 @@ export const AIChatbot: React.FC = () => {
 
   // Resource action handlers
   const handleScheduleInterview = (resourceId: string) => {
-    navigate(`${ROUTES.SCHEDULE_INTERVIEW}?resourceId=${resourceId}`);
+    const path = ROUTES.SCHEDULE_INTERVIEW.replace(':id', resourceId);
+    
+    // Navigate normally
+    navigate(path, {
+      state: {
+        data: {
+          id: resourceId,
+        },
+      },
+    });
   };
 
-  const handleViewTimesheet = (resourceId: string) => {
-    navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+  const handleViewTimesheet = async (resourceId: string) => {
+    try {
+      // First, get engagements to find the engagement ID for this resource
+      const baseUrl = process.env.REACT_APP_BASE_URL || '';
+      const response = await engagementService.getEngagements(baseUrl, 1, 10);
+      
+      const engagements = response?.data?.items || [];
+      
+      // Find engagement for this resource
+      const engagement = engagements.find((eng: any) => 
+        eng.resource?.id === resourceId && eng.hiringStatus === 'Active'
+      );
+      
+      if (engagement) {
+        // Navigate to timesheet page with engagement ID
+        navigate(`/engagements/${engagement.id}/timesheets`);
+      } else {
+        // Fallback to old method if no active engagement found
+        console.log('No active engagement found for resource:', resourceId);
+        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+      }
+    } catch (error) {
+      console.error('Error fetching engagements:', error);
+      // Fallback to old method on error
+      navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+    }
   };
 
   const handleViewInvoices = (resourceId: string) => {
-    navigate(`${ROUTES.INVOICES}?resourceId=${resourceId}`);
+    // Handle view invoices - navigate to invoices page
+    console.log('View invoices for resource:', resourceId);
+    // TODO: Implement navigation to invoices page
+  };
+
+  const handleSendInquiry = async (resourceId: string) => {
+    try {
+      const baseUrl = process.env.REACT_APP_BASE_URL || '';
+      const message = 'I am interested in learning more about your expertise and availability for potential collaboration.';
+      
+      await engagementService.sendMessage(baseUrl, resourceId, message);
+      
+      // Show success notification
+      Notification({
+        type: 'success',
+        message: 'Inquiry sent successfully!'
+      });
+      
+      // Redirect to inquiries page on success
+      navigate(ROUTES.INQUIRIES);
+    } catch (error) {
+      console.error('Error sending inquiry:', error);
+      Notification({
+        type: 'error',
+        message: 'Failed to send inquiry. Please try again.'
+      });
+    }
+  };
+
+  const handleViewDetails = (resourceId: string) => {
+    // Navigate to resource detail page
+    navigate(`${ROUTES.RESOURCEBYID.replace(':id', resourceId)}`);
   };
 
   const formatRolesResponse = (roles: Role[], totalTeamSize: number, phasing?: string, considerations?: string[]): string => {
@@ -312,7 +379,8 @@ export const AIChatbot: React.FC = () => {
                                         resource={resource}
                                         onScheduleInterview={handleScheduleInterview}
                                         onViewTimesheet={handleViewTimesheet}
-                                        onViewInvoices={handleViewInvoices}
+                                        onSendInquiry={handleSendInquiry}
+                                        onViewDetails={handleViewDetails}
                                       />
                                     ))}
                                   </div>
@@ -338,17 +406,6 @@ export const AIChatbot: React.FC = () => {
           </div>
 
           <div className={styles.inputArea}>
-            {messages.length > 0 && (
-              <div className={styles.newChatButtonContainer}>
-                <button 
-                  onClick={handleReset}
-                  className={styles.newChatButton}
-                  title="Start New Chat"
-                >
-                  New Chat
-                </button>
-              </div>
-            )}
             <div className={styles.optionalFields}>
               <input
                 type="text"

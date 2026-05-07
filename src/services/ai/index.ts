@@ -100,8 +100,8 @@ export class AiService extends HttpService {
     }
 
     try {
-      // Quick endpoint should be faster, but still allow 30 seconds timeout
-      const apiResponse = await this.post(`${baseUrl}ai/identify-roles/quick`, data, undefined, 30000);
+      // AI endpoints can take significant time, set timeout to 2 minutes for safety
+      const apiResponse = await this.post(`${baseUrl}ai/identify-roles/quick`, data, undefined, 120000);
       const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
       
       // prepareResponseObject wraps data in response.data

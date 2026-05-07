@@ -463,38 +463,6 @@
   border-radius: 0 0 20px 20px;
 }
 
-.newChatButtonContainer {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.newChatButton {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-
-  &:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
 
 .optionalFields {
   display: flex;

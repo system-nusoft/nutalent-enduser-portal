@@ -94,7 +94,11 @@
     "endDateRequired": "End date is required.",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
-    "passwordInvalid": "Password is invalid"
+    "passwordInvalid": "Password is invalid",
+    "noWorkNotesAvailable": "Please add work notes before generating summary",
+    "summaryGenerationFailed": "Failed to generate AI summary. Please try again.",
+    "dateRangeRequired": "Date range is required for generating summary",
+    "configurationError": "Configuration error. Please contact support."
   },
   "card": {
     "heading": {
@@ -166,7 +170,8 @@
     "confirmPayment": "Confirm Payment",
     "backToInterview": "Go to Interviews",
     "changeStatus": "Change Status",
-    "closeEngagement": "Close Engagement"
+    "closeEngagement": "Close Engagement",
+    "generateAISummary": "Generate AI Summary"
   },
   "accordian": {
     "feedbackFrom": "Feedback From",
@@ -189,7 +194,8 @@
     "addDepositAmount": "Add deposit amount",
     "poweredByAI": "Powered By AI",
     "firstName": "John",
-    "lastName": "Doe"
+    "lastName": "Doe",
+    "taskSummary": "Enter a comprehensive summary of all tasks completed during this period..."
   },
   "labels": {
     "upload": "Upload",
@@ -429,7 +435,8 @@
     "userCreated": "User successfully created",
     "selectTimeslot": "Please select a Timeslot",
     "interviewInFuture": "Interview Time should be in Future",
-    "monthlyResourcesPercentage": "*{{type}} last month"
+    "monthlyResourcesPercentage": "*{{type}} last month",
+    "summaryGenerated": "AI summary generated successfully"
   },
   "project": {
     "createProjectDesc": "Provide the Project Details to create and kickstart a new initiative",

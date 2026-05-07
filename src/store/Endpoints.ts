@@ -29,6 +29,8 @@ const ENDPOINTS = {
   INTERVIEW_DETAILS: (id: string) =>
     `end-user/resource/${id}/interview-details`,
   UPDATE_SCHEDULE_INTERVIEW: (id: string) => `resource/${id}/interview-details`,
+  GENERATE_TASK_SUMMARY: `ai/generate-task-summary`,
+  GENERATE_AND_SAVE_TASK_SUMMARY: `ai/generate-and-save-task-summary`,
   USER: "user",
   UPLOAD_IMAGE: "upload-image",
   ENGAGEMENTS: (id: string) => `resource/${id}/engagement`,

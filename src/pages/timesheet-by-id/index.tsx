@@ -7,8 +7,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AlertTriangle, TickGreen } from "src/assets";
 import { Button, Input, Table, Tag } from "src/components";
 import { DialogBox } from "src/components/modal/Modal";
+import { Notification } from "src/components";
 import { PrivatePageTemplate } from "src/components/private-page-template/PrivatePageTemplate";
 import { ROUTES } from "src/constants/navigation-routes";
+import { AppService } from "src/services/app";
 import {
   getTimesheetData,
   timesheetLoading,
@@ -41,6 +43,8 @@ export const ViewTimesheet = ({}: props) => {
   const dispatch = useDispatch();
   const [inputComments, setInputComments] = useState("");
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [taskSummary, setTaskSummary] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   useEffect(() => {
     dispatch(
@@ -52,6 +56,122 @@ export const ViewTimesheet = ({}: props) => {
       })
     );
   }, [timesheetId, dispatch]);
+
+  const onGenerateTaskSummary = async (): Promise<void> => {
+    setIsGeneratingSummary(true);
+    
+    // Validate timesheet data exists
+    if (!timesheetData?.TimesheetRevision || !Array.isArray(timesheetData.TimesheetRevision) || timesheetData.TimesheetRevision.length === 0) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    const currentRevision = timesheetData.TimesheetRevision[0];
+    
+    // Validate current revision exists
+    if (!currentRevision) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+    
+    // Collect work notes from timesheet details
+    const workNotes = currentRevision?.details?.map((item: any) => ({
+      date: item?.date ? dayjs(item.date).format("YYYY-MM-DD") : "",
+      workNotes: item?.workNotes ?? "",
+      hours: Number(item?.hours) || 0,
+    })).filter((item: any) => item?.workNotes?.trim()?.length > 0) || [];
+
+    // Validate work notes exist
+    if (!workNotes || workNotes.length === 0) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Validate base URL
+    const baseUrl: string | undefined = process.env.REACT_APP_BASE_URL;
+    if (!baseUrl) {
+      Notification({
+        type: "error",
+        message: t("error.configurationError")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Validate timesheetId exists
+    if (!timesheetId) {
+      Notification({
+        type: "error",
+        message: t("error.configurationError")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Get date range from work notes
+    const dates = workNotes.map((note: any) => note?.date).filter((date: string) => date).sort();
+    const startDate = dates?.[0];
+    const endDate = dates?.[dates.length - 1];
+
+    // Validate dates exist
+    if (!startDate || !endDate) {
+      Notification({
+        type: "error",
+        message: t("error.dateRangeRequired")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    try {
+      const appService = new AppService();
+      const response = await appService.postGenerateAndSaveTaskSummary(baseUrl, {
+        timesheetId: timesheetId,
+        workNotes,
+        projectName: timesheetData?.Engagement?.Project?.name ?? "Project",
+        timesheetPeriod: `${dayjs(startDate).format("MMM DD, YYYY")} - ${dayjs(endDate).format("MMM DD, YYYY")}`,
+      });
+
+      const generatedSummary = response?.data?.taskSummary ?? "";
+      
+      if (generatedSummary) {
+        setTaskSummary(generatedSummary);
+      }
+      
+      // Refresh timesheet data to get the updated summary from database
+      dispatch(
+        RequestAppAction.handleGetTimesheetById({
+          id: timesheetId,
+          cbSuccess: () => {
+            Notification({
+              type: "success",
+              message: t("notification.summaryGenerated")
+            });
+          },
+        })
+      );
+    } catch (error: unknown) {
+      const errorMessage = (error as any)?.data?.message ?? t("error.summaryGenerationFailed");
+      Notification({
+        type: "error",
+        message: errorMessage
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
 
   const columns: any = [
     {
@@ -310,16 +430,33 @@ export const ViewTimesheet = ({}: props) => {
               </div>
 
 {Array.isArray(timesheetData?.TimesheetRevision) && 
-                timesheetData?.TimesheetRevision.length > 0 && 
-                timesheetData?.TimesheetRevision[0]?.taskSummary?.trim() && (
+                timesheetData.TimesheetRevision.length > 0 && 
+                timesheetData.TimesheetRevision[0] &&
+                (timesheetData.TimesheetRevision[0]?.taskSummary?.trim() || 
+                 (timesheetData?.status !== TIMESHEET_STATUS.APPROVED && !timesheetData.TimesheetRevision[0]?.taskSummary?.trim())) && (
                 <div className="white-container w-full col-span-2">
                   <div className="flex flex-col gap-2">
-                    <div className={styles.card_heading}>
-                      {t("labels.taskSummary")}
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold">
+                        {t("labels.taskSummary")}
+                      </div>
+                      {timesheetData?.status !== TIMESHEET_STATUS.APPROVED && 
+                       timesheetData?.TimesheetRevision?.[0] && 
+                       !timesheetData.TimesheetRevision[0]?.taskSummary?.trim() && (
+                        <Button
+                          btn_Type="button"
+                          btn_class="filled_btn"
+                          onClick={onGenerateTaskSummary}
+                          label={t("button.generateAISummary")}
+                          disabled={isGeneratingSummary}
+                        />
+                      )}
                     </div>
-                    <div className={`max-h-[10rem] min-h-[3rem] overflow-auto ${styles.card_desc}`}>
-                      {timesheetData?.TimesheetRevision[0]?.taskSummary}
-                    </div>
+                    {(timesheetData?.TimesheetRevision?.[0]?.taskSummary?.trim() || taskSummary?.trim()) && (
+                      <div className={`max-h-[10rem] min-h-[3rem] overflow-auto ${styles.card_desc}`}>
+                        {taskSummary?.trim() || timesheetData?.TimesheetRevision?.[0]?.taskSummary}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
