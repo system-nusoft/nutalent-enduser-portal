@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role } from 'src/services/ai';
+import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role, PricingResult } from 'src/services/ai';
 import { EngagementService } from 'src/services/engagement';
 import { ResourceCard } from './ResourceCard';
 import { ROUTES } from 'src/constants/navigation-routes';
 import { Notification } from 'src/components';
 import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
-import { AiService, IdentifyRolesRequest, Role, PricingResult } from 'src/services/ai';
 import styles from './styles.module.scss';
 import { CLASSIFICATION_INTENT } from 'src/utils/enum';
-import { useTranslation } from 'react-i18next';
 
 enum MessageRole {
   USER = 'user',
