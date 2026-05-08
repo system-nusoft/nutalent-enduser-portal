@@ -34,6 +34,7 @@
     "interviewDuration": "{{duration}} min",
     "provideDetails": "Provide Details",
     "congratulations": "Congratulations!",
+    "recommendedSlots": "Recommended Slots",
     "yourInterviewHasBeenScheduled": "Your Interview has been Scheduled",
     "yourInterviewHasBeenRescheduled": "Your Interview has been Rescheduled",
     "manager": "{{name}}",
@@ -58,6 +59,9 @@
   },
   "help&feedback": {
     "description": "If we're really committed to growth, we never stop discovering new dimensions of self and self-expression"
+  },
+  "tooltip": {
+    "smartScheduleInfo": "Get AI-recommended interview slots based on optimal scheduling preferences"
   },
   "interview": {
     "description": "The resource has shared their availability in the slots below. Please select a time that suits you best to schedule the interview.",
@@ -132,6 +136,9 @@
     "update": "Update",
     "startAnother": "Start Another",
     "scheduleInterview": "Schedule Interview",
+    "smartSchedule": "Smart Schedule",
+    "refresh": "Refresh",
+    "loading": "Loading...",
     "schedule": "Schedule",
     "send": "Send",
     "inquire": "Inquire",
@@ -427,6 +434,9 @@
     "invalidToken": "Invalid token please try again",
     "userCreated": "User successfully created",
     "selectTimeslot": "Please select a Timeslot",
+    "noRecommendedSlots": "No Recommended Slots available for this resource at the moment",
+    "smartSchedulerFailed": "Could not fetch smart suggestions. Please try again or select a slot manually",
+    "smartSchedulerBusy": "Smart scheduling is busy right now. Please try again or select a slot manually",
     "interviewInFuture": "Interview Time should be in Future",
     "monthlyResourcesPercentage": "*{{type}} last month"
   },
@@ -440,5 +450,12 @@
     "endEngagementHeading": "Are you sure you want to end this Engagement?",
     "endEngagementParagraph": "Once this Engagement concludes, you will no longer be able to perform any Resource-related operations",
     "emptyProject": "A hyphen '-' indicates the Resource is not currently engaged in any project"
+  },
+  "chatbot": {
+    "pricingNoRole": "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?",
+    "fallbackHelp": "I can help you plan a project team or compare hiring rates. Try describing your project, or ask about rates for a specific role.",
+    "noResourcesFound": "I couldn't find any available resources for {{roleNames}} on our platform right now.",
+    "resourcesAvailable_one": "Here is {{count}} resource we have available for {{roleNames}}, with rates compared to the regional market:",
+    "resourcesAvailable_other": "Here are {{count}} resources we have available for {{roleNames}}, with rates compared to the regional market:"
   }
 }

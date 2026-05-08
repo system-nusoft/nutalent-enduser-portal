@@ -29,6 +29,7 @@ const ENDPOINTS = {
   INTERVIEW_DETAILS: (id: string) =>
     `end-user/resource/${id}/interview-details`,
   UPDATE_SCHEDULE_INTERVIEW: (id: string) => `resource/${id}/interview-details`,
+  SMART_SCHEDULER_SUGGEST_SLOTS: "smart-scheduler/suggest-slots",
   USER: "user",
   UPLOAD_IMAGE: "upload-image",
   ENGAGEMENTS: (id: string) => `resource/${id}/engagement`,

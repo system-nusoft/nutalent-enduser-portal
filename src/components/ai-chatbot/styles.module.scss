@@ -284,6 +284,113 @@
   }
 }
 
+.rateRow {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+.rateBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.rateLabel {
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.rateValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #111);
+}
+
+.rateRange {
+  font-size: 11px;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.pricingIntro {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  line-height: 1.5;
+}
+
+.levelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.resourceCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-subtle, #f9fafb);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatarPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent, #6366f1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.resourceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.resourceName {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.resourceTitle {
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resourceMeta {
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+}
+
 .message.user {
   align-items: flex-end;
 
