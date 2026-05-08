@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AiService, IdentifyRolesRequest, Role, PricingResult } from 'src/services/ai';
 import styles from './styles.module.scss';
+import { CLASSIFICATION_INTENT } from 'src/utils/enum';
+import { useTranslation } from 'react-i18next';
 
 enum MessageRole {
   USER = 'user',
@@ -28,6 +30,7 @@ export const AIChatbot: React.FC = () => {
   const [userLocation, setUserLocation] = useState<string>('Global');
   const [locationFetched, setLocationFetched] = useState(false);
   const aiService = new AiService();
+  const { t } = useTranslation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -194,7 +197,7 @@ export const AIChatbot: React.FC = () => {
       console.log('[chatbot] Classification result:', classification);
 
       // Step 2: route based on intent
-      if (classification.intent === 'pricing' && classification.roles.length > 0) {
+      if (classification.intent === CLASSIFICATION_INTENT.PRICING && classification.roles.length > 0) {
          console.log('[chatbot] → pricing flow, roles:', classification.roles);
         const response = await aiService.optimizePricing(baseUrl, {
           roles: classification.roles,
@@ -212,7 +215,7 @@ export const AIChatbot: React.FC = () => {
             pricingData: response.results,
           },
         ]);
-      } else if (classification.intent === 'role_identification') {
+      } else if (classification.intent === CLASSIFICATION_INTENT.ROLE_IDENTIFICATION) {
         // Existing flow — unchanged
         const extractedReqs = extractRequirements();
         const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
@@ -249,9 +252,9 @@ export const AIChatbot: React.FC = () => {
           {
             role: MessageRole.ASSISTANT,
             content:
-              classification.intent === 'pricing'
-                ? "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?"
-                : "I can help you plan a project team or compare hiring rates. Try describing your project, or ask about rates for a specific role.",
+              classification.intent === CLASSIFICATION_INTENT.PRICING
+                ? t('chatbot.pricingNoRole')
+                : t('chatbot.fallbackHelp'),
             timestamp: new Date(),
           },
         ]);
@@ -294,10 +297,8 @@ export const AIChatbot: React.FC = () => {
 
     const intro =
       totalResources === 0
-        ? `I couldn't find any available resources for ${roleNames} on our platform right now.`
-        : `Here ${totalResources === 1 ? 'is' : 'are'} ${totalResources} ${
-            totalResources === 1 ? 'resource' : 'resources'
-          } we have available for ${roleNames}, with rates compared to the regional market:`;
+        ? t('chatbot.noResourcesFound', { roleNames })
+        : t('chatbot.resourcesAvailable', { count: totalResources, roleNames });
 
     return (
     <div className={styles.pricingResults}>
@@ -367,18 +368,18 @@ export const AIChatbot: React.FC = () => {
                 )}
 
                 <div className={styles.resourceList}>
-                  {lr.resources.slice(0, 3).map((res) => (
-                    <div key={res.id} className={styles.resourceCard}>
-                      {res.profilePicture ? (
-                        <img src={res.profilePicture} alt={res.name} className={styles.avatar} />
+                  {lr.resources?.slice(0, 3).map((res, resIdx) => (
+                    <div key={res?.id ?? resIdx} className={styles.resourceCard}>
+                      {res?.profilePicture ? (
+                        <img src={res.profilePicture} alt={res?.name || '-'} className={styles.avatar} />
                       ) : (
-                        <div className={styles.avatarPlaceholder}>{res.name?.[0] || '?'}</div>
+                        <div className={styles.avatarPlaceholder}>{res?.name?.[0] || '-'}</div>
                       )}
                       <div className={styles.resourceInfo}>
-                        <div className={styles.resourceName}>{res.name}</div>
-                        <div className={styles.resourceTitle}>{res.title}</div>
+                        <div className={styles.resourceName}>{res?.name || '-'}</div>
+                        <div className={styles.resourceTitle}>{res?.title || '-'}</div>
                         <div className={styles.resourceMeta}>
-                          ${res.hourlyRate}/hr • {res.totalYearsOfExperience}y exp
+                          ${res?.hourlyRate ?? '-'}/hr • {res?.totalYearsOfExperience ?? '-'}y exp
                         </div>
                       </div>
                     </div>

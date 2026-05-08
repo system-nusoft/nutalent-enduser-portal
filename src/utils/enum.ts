@@ -48,3 +48,9 @@ export enum ENGAGEMENTS_STATUS {
   ACTIVE = "Active",
   ENDED = "Closed",
 }
+
+export enum CLASSIFICATION_INTENT {
+  PRICING = "pricing",
+  ROLE_IDENTIFICATION = "role_identification",
+  UNKNOWN = "unknown",
+}

@@ -450,5 +450,12 @@
     "endEngagementHeading": "Are you sure you want to end this Engagement?",
     "endEngagementParagraph": "Once this Engagement concludes, you will no longer be able to perform any Resource-related operations",
     "emptyProject": "A hyphen '-' indicates the Resource is not currently engaged in any project"
+  },
+  "chatbot": {
+    "pricingNoRole": "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?",
+    "fallbackHelp": "I can help you plan a project team or compare hiring rates. Try describing your project, or ask about rates for a specific role.",
+    "noResourcesFound": "I couldn't find any available resources for {{roleNames}} on our platform right now.",
+    "resourcesAvailable_one": "Here is {{count}} resource we have available for {{roleNames}}, with rates compared to the regional market:",
+    "resourcesAvailable_other": "Here are {{count}} resources we have available for {{roleNames}}, with rates compared to the regional market:"
   }
 }
