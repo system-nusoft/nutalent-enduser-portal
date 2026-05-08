@@ -78,13 +78,20 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
         <div className={styles.skills}>
           <span className={styles.label}>Skills:</span>
           <div className={styles.skillsList}>
-            {resource?.skills?.slice(0, 5)?.map((skill, idx) => (
-              <span key={idx} className={styles.skillTag}>
-                {skill}
-              </span>
-            )) || <span>No skills listed</span>}
-            {resource?.skills && resource.skills.length > 5 && (
-              <span className={styles.skillTag}>+{resource.skills.length - 5} more</span>
+            {/* TODO: Backend should limit skills to top 5 most relevant */}
+            {resource?.skills && resource.skills.length > 0 ? (
+              <>
+                {resource.skills.slice(0, 5).map((skill, idx) => (
+                  <span key={idx} className={styles.skillTag}>
+                    {skill}
+                  </span>
+                ))}
+                {resource.skills.length > 5 && (
+                  <span className={styles.skillTag}>+{resource.skills.length - 5} more</span>
+                )}
+              </>
+            ) : (
+              <span>No skills listed</span>
             )}
           </div>
         </div>

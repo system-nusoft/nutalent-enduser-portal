@@ -376,18 +376,18 @@ export const AIChatbot: React.FC = () => {
                               <div key={roleIdx} className={styles.roleSection}>
                                 <div className={styles.roleHeader}>
                                   <h4 className={styles.roleTitle}>
-                                    {roleWithRes.role.title} ({roleWithRes.role.seniorityLevel})
+                                    {roleWithRes?.role?.title || 'Unknown Role'} ({roleWithRes?.role?.seniorityLevel || 'N/A'})
                                   </h4>
                                   <span className={styles.rolePriority}>
-                                    {roleWithRes.role.priority}
+                                    {roleWithRes?.role?.priority || 'N/A'}
                                   </span>
                                 </div>
-                                <p className={styles.roleReasoning}>{roleWithRes.role.reasoning}</p>
+                                <p className={styles.roleReasoning}>{roleWithRes?.role?.reasoning || ''}</p>
                                 <div className={styles.roleSkills}>
-                                  <strong>Required Skills:</strong> {roleWithRes.role.skills.join(', ')}
+                                  <strong>Required Skills:</strong> {roleWithRes?.role?.skills?.join(', ') || 'N/A'}
                                 </div>
                                 
-                                {roleWithRes.matchingResources.length > 0 ? (
+                                {roleWithRes?.matchingResources && roleWithRes.matchingResources.length > 0 ? (
                                   <div className={styles.matchingResourcesSection}>
                                     <h5 className={styles.matchingSectionTitle}>
                                       {roleWithRes.matchingResources.length} Matching {roleWithRes.matchingResources.length === 1 ? 'Resource' : 'Resources'}
