@@ -49,6 +49,10 @@ export enum INTERVIEW_REQUESTS {
   UPDATE_INTERVIEW_REQUEST = "interview/toggleUpdateInterview",
 }
 
+export const SMART_SCHEDULER_REQUESTS = {
+  GET_SMART_SCHEDULER_SLOTS_REQUEST: "GET_SMART_SCHEDULER_SLOTS_REQUEST",
+};
+
 export enum MESSAGE_REQUESTS {
   GET_MESSAGES_REQUEST = "messages/toggleGetMessages",
   POST_MESSAGE_REQUEST = "messages/togglePostMessage",

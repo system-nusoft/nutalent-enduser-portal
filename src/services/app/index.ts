@@ -295,6 +295,23 @@ export class AppService extends HttpService {
       throw prepareErrorResponse(error);
     }
   };
+  fetchSmartSchedulerSlots = async (
+    baseAuthUrl: string,
+    data: any
+  ): Promise<any> => {
+    try {
+      const apiResponse = await this.post(
+        `${baseAuthUrl}` + ENDPOINTS.SMART_SCHEDULER_SUGGEST_SLOTS,
+        data,
+        undefined,
+        180000 // 3min
+      );
+
+      return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  };
   getElasticSearch = async (baseAuthUrl: string, query: any): Promise<any> => {
     try {
       const apiResponse = await this.get(
@@ -312,8 +329,7 @@ export class AppService extends HttpService {
       const apiResponse = await this.post(
         `${baseAuthUrl}` + ENDPOINTS.UPLOAD_JD,
         query,
-        { headers: { "Content-Type": "multipart/form-data" } },
-        30000
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);

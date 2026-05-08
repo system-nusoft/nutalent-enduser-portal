@@ -1,4 +1,5 @@
-import { Form, Spin } from "antd";
+import { Form, Spin, Tooltip, Button as AntButton } from "antd";
+import { LoadingOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
@@ -19,7 +20,12 @@ import {
   getInterviewDetailsLoading,
 } from "src/store/selectors/features/interview-details-selector";
 import { interviewLoading } from "src/store/selectors/features/interview-selector";
+import {
+  getSmartSchedulerData,
+  getSmartSchedulerLoading,
+} from "src/store/selectors/features/smart-scheduler-selector";
 import RequestAppAction from "src/store/slices/app-actions";
+import { clearSmartSchedulerSlots } from "src/store/slices/features/smart-scheduler-reducer";
 import styles from "./styles.module.scss";
 
 dayjs.extend(utc);
@@ -30,6 +36,14 @@ const returnTimeByTimezone = (
   targetTimezone: string
 ): string => {
   return dayjs.utc(dateTime).tz(targetTimezone).format("hh:mm A");
+};
+
+// SMART_SCHEDULER: shape of a recommended slot from /smart-scheduler/suggest-slots
+type RecommendedSlot = {
+  startTimeUtc: string;
+  endTimeUtc: string;
+  score: number;
+  reasoning: string;
 };
 
 export const ScheduledInterview = () => {
@@ -51,6 +65,17 @@ export const ScheduledInterview = () => {
     { timezone: string; offset: string }[]
   >([]);
 
+  // SMART_SCHEDULER: pull recommendations
+  const smartSchedulerData: any = useSelector(getSmartSchedulerData);
+  const isFetchingRecommendations = useSelector(getSmartSchedulerLoading);
+  const recommendedSlots: RecommendedSlot[] =
+    smartSchedulerData?.data?.suggestedSlots ||
+    smartSchedulerData?.suggestedSlots ||
+    [];
+  const hasFetchedRecommendations = !!(
+    smartSchedulerData?.data?.suggestedSlots ||
+    smartSchedulerData?.suggestedSlots
+  );
   const getTimezonesWithOffsets = () => {
     const arr = moment.tz.names(); // Get all timezone names
     const allTimeZones = arr.map((tz) => {
@@ -102,6 +127,21 @@ export const ScheduledInterview = () => {
     setPrevSelectedTime(null);
   };
 
+  // SMART_SCHEDULER: check whether a slot (in selectedTimeZone) matches a recommendation
+  const isRecommendedSlot = (startTime: string): boolean => {
+    if (!recommendedSlots.length || !selectedTimeZone || !selectedDay) {
+      return false;
+    }
+    const slotDateStr = dayjs(selectedDay).format("YYYY-MM-DD");
+    return recommendedSlots.some((rec) => {
+      const recLocal = dayjs.utc(rec.startTimeUtc).tz(selectedTimeZone);
+      return (
+        recLocal.format("YYYY-MM-DD") === slotDateStr &&
+        recLocal.format("hh:mm A") === startTime
+      );
+    });
+  };
+
   const returnTimeSlot = ({
     startTime,
     endTime,
@@ -109,6 +149,8 @@ export const ScheduledInterview = () => {
     startTime: string;
     endTime: string;
   }) => {
+    const isRecommended = isRecommendedSlot(startTime);
+    // SMART_SCHEDULER: check recommendation for highlight
     return (
       <div
         onClick={() => onSelectTime({ startTime, endTime })}
@@ -120,7 +162,7 @@ export const ScheduledInterview = () => {
           prevSelectedTime && startTime === prevSelectedTime[0]?.startTime
             ? "text-green-700 border-green-300 bg-green-300"
             : "text-blue-600 border-blue-300"
-        }`}
+        } ${isRecommended ? styles.recommended_slot : ""}`}
       >
         {startTime} : {endTime}
       </div>
@@ -378,6 +420,42 @@ export const ScheduledInterview = () => {
     }
   };
 
+  // SMART_SCHEDULER: dispatch the smart-scheduler request
+  const fetchSmartSchedule = () => {
+    if (!id || !selectedTimeZone) return;
+    dispatch(
+      RequestAppAction.handleGetSmartSchedulerSlots({
+        data: {
+          resourceId: id,
+          userTimeZone: selectedTimeZone,
+          maxSuggestions: 5,
+          preferMidWeek: true,
+        },
+        cbSuccess: (res) => {
+          const slots = res?.data?.suggestedSlots || [];
+          if (slots.length === 0) {
+            Notification({
+              type: "info",
+              message: t("notification.noRecommendedSlots"),
+            });
+          }
+        },
+        cbFailure: (msg) => {
+          const isOverloaded =
+            msg?.includes("high demand") ||
+            msg?.includes("temporarily unavailable") ||
+            msg?.includes("503");
+          Notification({
+            type: "error",
+            message: isOverloaded
+              ? t("notification.smartSchedulerBusy")
+              : t("notification.smartSchedulerFailed"),
+          });
+        },
+      })
+    );
+  };
+
   useEffect(() => {
     if ((Array.isArray(timeZones) && timeZones?.length > 0) || selectedTimeZone)
       dispatch(
@@ -435,6 +513,8 @@ export const ScheduledInterview = () => {
     return () => {
       setTimeZones([]);
       setIsExpanded(null);
+      // SMART_SCHEDULER: clear cached recommendations on unmount
+      dispatch(clearSmartSchedulerSlots());
     };
   }, []);
 
@@ -508,6 +588,8 @@ export const ScheduledInterview = () => {
   useEffect(() => {
     form.setFieldValue("timezone", selectedTimeZone);
     if (selectedDay) setIsExpanded(null);
+    // SMART_SCHEDULER: clear recommendations when timezone changes
+    dispatch(clearSmartSchedulerSlots());
   }, [selectedTimeZone]);
 
   return (
@@ -547,7 +629,9 @@ export const ScheduledInterview = () => {
         </div>
       ) : (
         <div className="white-container">
-          <Spin spinning={isLoading || isScheduleingInterview}>
+          <Spin
+            spinning={isLoading || isScheduleingInterview}
+          >
             <div className="grid grid-cols-4">
               <div className="col-span-1">
                 <div className="flex flex-col pe-2 gap-6">
@@ -593,6 +677,9 @@ export const ScheduledInterview = () => {
                   selectedDay={selectedDay}
                   setPrevSelectedTime={() => setPrevSelectedTime(null)}
                   interviewDays={interviewDetails?.interviewDays}
+                  recommendedDates={recommendedSlots?.map((rec) =>
+                    dayjs.utc(rec.startTimeUtc).tz(selectedTimeZone || "UTC").format("YYYY-MM-DD")
+                  )}
                 />
 
                 <div className="w-100 ">
@@ -617,6 +704,39 @@ export const ScheduledInterview = () => {
               </div>
               <div className={`${selectedDay ? "col-span-1" : "hidden"}`}>
                 <div className="h-full flex flex-col items-center  p-6 pt-14">
+                  {/* SMART_SCHEDULER: button + recommended-slots heading */}
+                  <div className="w-full flex flex-col items-center gap-2 mb-2">
+                    <AntButton
+                      ghost
+                      type="primary"
+                      onClick={fetchSmartSchedule}
+                      disabled={isFetchingRecommendations || !selectedTimeZone}
+                    >
+                      <span className="flex items-center" style={{ gap: "10px" }}>
+                        {isFetchingRecommendations ? (
+                          <>
+                            <LoadingOutlined />
+                            {t("button.loading")}
+                          </>
+                        ) : hasFetchedRecommendations ? (
+                          t("button.refresh")
+                        ) : (
+                          t("button.smartSchedule")
+                        )}
+                        <Tooltip title={t("tooltip.smartScheduleInfo")} placement="top">
+                          <InfoCircleOutlined
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ cursor: "help", marginLeft: "8px" }}
+                          />
+                        </Tooltip>
+                      </span>
+                    </AntButton>
+                    {hasFetchedRecommendations && recommendedSlots.length > 0 && (
+                      <div className={styles.recommended_heading}>
+                        {t("heading.recommendedSlots")}
+                      </div>
+                    )}
+                  </div>
                   <div className={styles.icon_text}>{returnWeekDay()}</div>
                   <div className="h-96 px-2 mt-2 overflow-auto w-full flex flex-col gap-2">
                     {Array.isArray(interviewDetails?.interviewTimeSlots) &&

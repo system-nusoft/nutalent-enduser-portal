@@ -9,6 +9,7 @@ import { engagementsFeatureReducer } from "./engagements-reducer";
 import { favoriteResourcesFeatureReducer } from "./favorite-resources";
 import { inquiresFeatureReducer } from "./inquires-selector";
 import { interviewDetailsFeatureReducer } from "./interview-details-reducer";
+import smartSchedulerReducer from "./smart-scheduler-reducer";
 import { interviewFeatureReducer } from "./interview-reducer";
 import { invoicesFeatureReducer } from "./invoices-reducer";
 import { messagesFeatureReducer } from "./messages-reducer";
@@ -40,6 +41,7 @@ const featuresReducer = combineReducers({
   elasticSearch: elasticSearchFeatureReducer,
   timeZone: timeZonesFeatureReducer,
   interviewDetails: interviewDetailsFeatureReducer,
+  smartScheduler: smartSchedulerReducer,
   user: userFeatureReducer,
   image: uploadImageFeatureReducer,
   engagements: engagementsFeatureReducer,

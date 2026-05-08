@@ -15,6 +15,7 @@ import {
   FAVORITE_RESOURCES_REQUESTS,
   INQUIRES_REQUESTS,
   INTERVIEW_DETAILS_REQUESTS,
+  SMART_SCHEDULER_REQUESTS,
   INTERVIEW_REQUESTS,
   INVOICES_REQUESTS,
   MESSAGE_REQUESTS,
@@ -313,6 +314,27 @@ class RequestAppAction {
   }) {
     return {
       type: INTERVIEW_DETAILS_REQUESTS.GET_INTERVIEW_DETAILS_REQUEST,
+      payload,
+    };
+  }
+  static handleGetSmartSchedulerSlots(payload: {
+    data: {
+      resourceId: string;
+      userTimeZone: string;
+      userCountry?: string;
+      fromDate?: string;
+      toDate?: string;
+      durationMinutes?: number;
+      maxSuggestions?: number;
+      avoidEarlyMorning?: boolean;
+      avoidLateEvening?: boolean;
+      preferMidWeek?: boolean;
+    };
+    cbSuccess?: (res: any) => void;
+    cbFailure?: (mes: string) => void;
+  }) {
+    return {
+      type: SMART_SCHEDULER_REQUESTS.GET_SMART_SCHEDULER_SLOTS_REQUEST,
       payload,
     };
   }

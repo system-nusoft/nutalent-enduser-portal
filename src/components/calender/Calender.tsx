@@ -18,6 +18,7 @@ interface props {
   selectedDay?: null | string | Date;
   interviewDays: string;
   setPrevSelectedTime: () => void;
+  recommendedDates?: string[];
 }
 
 const CustomCalendar = ({
@@ -25,6 +26,7 @@ const CustomCalendar = ({
   interviewDays,
   selectedDay,
   setPrevSelectedTime,
+  recommendedDates = [],
 }: props) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
@@ -121,6 +123,7 @@ const CustomCalendar = ({
         selectedDay={selectedDay}
         highlightStart={highlightStart}
         highlightEnd={highlightEnd}
+        recommendedDates={recommendedDates}
       />
     </div>
   );
@@ -133,6 +136,7 @@ interface CalendarDaysProps {
   highlightEnd: Date;
   selectedDay?: any;
   setPrevSelectedTime: () => void;
+  recommendedDates?: string[];
 }
 
 const CalendarDays: React.FC<CalendarDaysProps> = ({
@@ -143,6 +147,7 @@ const CalendarDays: React.FC<CalendarDaysProps> = ({
   highlightEnd,
   setPrevSelectedTime,
   interviewDays,
+  recommendedDates = [],
 }) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -165,6 +170,13 @@ const CalendarDays: React.FC<CalendarDaysProps> = ({
     "Saturday",
     "Sunday",
   ];
+
+  const isRecommendedDate = (day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    return recommendedDates.includes(dateStr);
+  };
 
   const isHighlighted = (day: number) => {
     const dayDate = new Date(year, month, day);
@@ -228,7 +240,7 @@ const CalendarDays: React.FC<CalendarDaysProps> = ({
                 : day
                 ? `cursor-default ${styles.day_text}`
                 : undefined
-            }`}
+            } ${day && isRecommendedDate(day) ? styles.recommended_date : ""}`}
           >
             {day}
             {day &&
