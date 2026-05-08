@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role } from 'src/services/ai';
+import { EngagementService } from 'src/services/engagement';
+import { ResourceCard } from './ResourceCard';
+import { ROUTES } from 'src/constants/navigation-routes';
+import { Notification } from 'src/components';
+import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
 import { AiService, IdentifyRolesRequest, Role, PricingResult } from 'src/services/ai';
 import styles from './styles.module.scss';
 import { CLASSIFICATION_INTENT } from 'src/utils/enum';
@@ -14,10 +22,13 @@ interface Message {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
+  rolesWithResources?: RoleWithResources[];
   pricingData?: PricingResult[];
 }
 
 export const AIChatbot: React.FC = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -30,7 +41,7 @@ export const AIChatbot: React.FC = () => {
   const [userLocation, setUserLocation] = useState<string>('Global');
   const [locationFetched, setLocationFetched] = useState(false);
   const aiService = new AiService();
-  const { t } = useTranslation();
+  const engagementService = new EngagementService();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,18 +55,18 @@ export const AIChatbot: React.FC = () => {
       const elapsed = Date.now() - loadingStartTime;
       const seconds = Math.floor(elapsed / 1000);
       
-      let message = 'Analyzing your project requirements and generating optimal team recommendations...';
+      let message = t('aiChatbot.analyzing');
+      
+      if (seconds >= 5) {
+        message = t('aiChatbot.findingTalent');
+      }
       
       if (seconds >= 10) {
-        message = 'Deep learning analysis in progress... This may take up to 30 seconds for complex projects.';
+        message = t('aiChatbot.calculatingScores');
       }
       
-      if (seconds >= 20) {
-        message = 'Processing complex requirements and optimizing team composition... Almost there!';
-      }
-      
-      if (seconds >= 30) {
-        message = 'Finalizing recommendations and ensuring optimal team structure...';
+      if (seconds >= 15) {
+        message = t('aiChatbot.preparingCards');
       }
 
       setMessages(prev => prev.map(msg => 
@@ -75,6 +86,91 @@ export const AIChatbot: React.FC = () => {
     // Keywords should be extracted from backend configuration
     // For now, return empty array and let backend handle requirement extraction
     return [];
+  };
+
+  // Resource action handlers
+  const handleScheduleInterview = (resourceId: string) => {
+    const path = ROUTES.SCHEDULE_INTERVIEW.replace(':id', resourceId);
+    
+    // Navigate normally
+    navigate(path, {
+      state: {
+        data: {
+          id: resourceId,
+        },
+      },
+    });
+  };
+
+  const handleViewTimesheet = async (resourceId: string) => {
+    try {
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        console.error('Base URL not configured');
+        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+        return;
+      }
+
+      const response = await engagementService.getEngagements(baseUrl, 1, 10);
+      
+      const engagements = response?.data?.items || [];
+      
+      // Find engagement for this resource using enum
+      const engagement = engagements.find((eng: any) => 
+        eng?.resource?.id === resourceId && eng?.hiringStatus === ENGAGEMENTS_STATUS.ACTIVE
+      );
+      
+      if (engagement?.id) {
+        navigate(ROUTES.VIEW_TIMESHEET.replace(':engagementId', engagement.id).replace(':resourceId', resourceId));
+      } else {
+        console.log('No active engagement found for resource:', resourceId);
+        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+      }
+    } catch (error) {
+      console.error('Error fetching engagements:', error);
+      navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+    }
+  };
+
+  const handleViewInvoices = (resourceId: string) => {
+    // Handle view invoices - navigate to invoices page
+    console.log('View invoices for resource:', resourceId);
+    // TODO: Implement navigation to invoices page
+  };
+
+  const handleSendInquiry = async (resourceId: string) => {
+    try {
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        Notification({
+          type: 'error',
+          message: t('error.configurationError')
+        });
+        return;
+      }
+
+      const message = t('aiChatbot.inquiryMessage');
+      
+      await engagementService.sendMessage(baseUrl, resourceId, message);
+      
+      Notification({
+        type: 'success',
+        message: t('notification.inquirySent')
+      });
+      
+      navigate(ROUTES.INQUIRIES);
+    } catch (error) {
+      console.error('Error sending inquiry:', error);
+      Notification({
+        type: 'error',
+        message: t('error.inquiryFailed')
+      });
+    }
+  };
+
+  const handleViewDetails = (resourceId: string) => {
+    // Navigate to resource detail page
+    navigate(`${ROUTES.RESOURCEBYID.replace(':id', resourceId)}`);
   };
 
   const formatRolesResponse = (roles: Role[], totalTeamSize: number, phasing?: string, considerations?: string[]): string => {
@@ -181,7 +277,7 @@ export const AIChatbot: React.FC = () => {
 
     const loadingMessage: Message = {
       role: MessageRole.ASSISTANT,
-      content: 'Analyzing your project requirements and generating optimal team recommendations...',
+      content: t('aiChatbot.analyzing'),
       timestamp: new Date(),
       isLoading: true
     };
@@ -189,6 +285,49 @@ export const AIChatbot: React.FC = () => {
 
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL || '';
+      if (!baseUrl) {
+        throw new Error(t('error.configurationError'));
+      }
+      const extractedReqs = extractRequirements();
+      const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
+
+      const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
+
+      const requestData: IdentifyRolesRequest = {
+        projectDescription: input,
+        requirements: finalRequirements,
+        budget: budget || undefined,
+        timeline: timeline || undefined
+      };
+
+      // Use quick endpoint for faster response with resource matching
+      const response: any = await aiService.identifyRolesQuick(baseUrl, requestData);
+
+      setMessages(prev => prev.filter(msg => !msg.isLoading));
+
+      
+      // Safety checks for response data - Quick endpoint returns roles with resources
+      const rolesWithResources = response?.roles || [];
+      const teamSize = response?.totalEstimatedTeamSize ?? rolesWithResources.length;
+      const totalResources = response?.totalMatchingResources ?? 0;
+
+      // Create summary message
+      let summaryContent = t('aiChatbot.summaryMessage', { 
+        teamSize, 
+        roleText: teamSize === 1 ? t('aiChatbot.role') : t('aiChatbot.roles'),
+        totalResources,
+        resourceText: totalResources === 1 ? t('aiChatbot.resource') : t('aiChatbot.resources')
+      });
+      summaryContent += `\n\n${t('aiChatbot.showingTalent')}`;
+
+      const assistantMessage: Message = {
+        role: MessageRole.ASSISTANT,
+        content: summaryContent,
+        timestamp: new Date(),
+        rolesWithResources: rolesWithResources
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
       const currentInput = userMessage.content;
 
       // Step 1: classify intent + extract roles via Gemini
@@ -264,7 +403,7 @@ export const AIChatbot: React.FC = () => {
       
       const errorMessage: Message = {
         role: MessageRole.ASSISTANT,
-        content: `Sorry, I encountered an error: ${error?.message || 'Unable to process your request'}. Please try again.`,
+        content: t('aiChatbot.errorMessage', { error: error?.message || t('aiChatbot.defaultError') }),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -281,7 +420,7 @@ export const AIChatbot: React.FC = () => {
     }
   };
 
-  const startNewChat = () => {
+  const handleReset = () => {
     setMessages([]);
     setInput('');
     setRequirements([]);
@@ -408,13 +547,6 @@ export const AIChatbot: React.FC = () => {
             </div>
             <div className={styles.headerActions}>
               <button 
-                onClick={startNewChat}
-                className={styles.iconButton}
-                title="New Chat"
-              >
-                ➕
-              </button>
-              <button 
                 onClick={() => setIsOpen(false)}
                 className={styles.closeButton}
               >
@@ -427,7 +559,7 @@ export const AIChatbot: React.FC = () => {
           <div className={styles.messagesContainer}>
             {messages.length === 0 ? (
               <div className={styles.welcomeScreen}>
-                <div className={styles.welcomeIcon}>🚀</div>
+                {/* <div className={styles.welcomeIcon}>AI</div> */}
                 <h2>Welcome to AI Role Advisor!</h2>
                 <p>Describe your project and I'll recommend the perfect team composition.</p>
                 <div className={styles.exampleQueries}>
@@ -451,32 +583,6 @@ export const AIChatbot: React.FC = () => {
                     "E-commerce platform with React and Node.js"
                   </div>
                 </div>
-
-                <div className={styles.staticRoles}>
-                  <p><strong>Available Roles:</strong></p>
-                  <div className={styles.rolesGrid}>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Mobile App Developer</div>
-                      <div className={styles.roleSkills}>React Native, Flutter, Mobile UI</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Backend Developer</div>
-                      <div className={styles.roleSkills}>Node.js, MongoDB, REST API</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>UI/UX Designer</div>
-                      <div className={styles.roleSkills}>Mobile Design, Fitness App UX</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>Social Features Developer</div>
-                      <div className={styles.roleSkills}>Real-time Communication, Social APIs</div>
-                    </div>
-                    <div className={styles.roleCard}>
-                      <div className={styles.roleTitle}>QA Engineer</div>
-                      <div className={styles.roleSkills}>Testing, Quality Assurance</div>
-                    </div>
-                  </div>
-                </div>
               </div>
             ) : (
               messages.map((msg, idx) => (
@@ -494,17 +600,63 @@ export const AIChatbot: React.FC = () => {
                     ) : msg.pricingData && msg.pricingData.length > 0 ? (
                       renderPricingResult(msg.pricingData)
                     ) : (
-                      <div className={styles.messageText}>
-                        {msg.content.split('\n').map((line, i) => {
-                          if (line.startsWith('**') && line.endsWith('**')) {
-                            return <strong key={i}>{line.replace(/\*\*/g, '')}<br /></strong>;
-                          }
-                          if (line.startsWith('•')) {
-                            return <div key={i} className={styles.bulletPoint}>{line}<br /></div>;
-                          }
-                          return <span key={i}>{line}<br /></span>;
-                        })}
-                      </div>
+                      <>
+                        <div className={styles.messageText}>
+                          {msg.content.split('\n').map((line, i) => {
+                            if (line.startsWith('**') && line.endsWith('**')) {
+                              return <strong key={i}>{line.replace(/\*\*/g, '')}<br /></strong>;
+                            }
+                            if (line.startsWith('•')) {
+                              return <div key={i} className={styles.bulletPoint}>{line}<br /></div>;
+                            }
+                            return <span key={i}>{line}<br /></span>;
+                          })}
+                        </div>
+                        
+                        {/* Render resource cards if available */}
+                        {msg.rolesWithResources && msg.rolesWithResources.length > 0 && (
+                          <div className={styles.rolesContainer}>
+                            {msg.rolesWithResources.map((roleWithRes, roleIdx) => (
+                              <div key={roleIdx} className={styles.roleSection}>
+                                <div className={styles.roleHeader}>
+                                  <h4 className={styles.roleTitle}>
+                                    {roleWithRes?.role?.title || 'Unknown Role'} ({roleWithRes?.role?.seniorityLevel || 'N/A'})
+                                  </h4>
+                                  <span className={styles.rolePriority}>
+                                    {roleWithRes?.role?.priority || 'N/A'}
+                                  </span>
+                                </div>
+                                <p className={styles.roleReasoning}>{roleWithRes?.role?.reasoning || ''}</p>
+                                <div className={styles.roleSkills}>
+                                  <strong>Required Skills:</strong> {roleWithRes?.role?.skills?.join(', ') || 'N/A'}
+                                </div>
+                                
+                                {roleWithRes?.matchingResources && roleWithRes.matchingResources.length > 0 ? (
+                                  <div className={styles.matchingResourcesSection}>
+                                    <h5 className={styles.matchingSectionTitle}>
+                                      {roleWithRes.matchingResources.length} Matching {roleWithRes.matchingResources.length === 1 ? 'Resource' : 'Resources'}
+                                    </h5>
+                                    {roleWithRes.matchingResources.map((resource) => (
+                                      <ResourceCard
+                                        key={resource.id}
+                                        resource={resource}
+                                        onScheduleInterview={handleScheduleInterview}
+                                        onViewTimesheet={handleViewTimesheet}
+                                        onSendInquiry={handleSendInquiry}
+                                        onViewDetails={handleViewDetails}
+                                      />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className={styles.noResources}>
+                                    No matching resources found for this role.
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className={styles.timestamp}>
@@ -548,7 +700,7 @@ export const AIChatbot: React.FC = () => {
                 disabled={loading || !input.trim()}
                 className={styles.sendButton}
               >
-                {loading ? '⏳' : '🚀'} {loading ? 'Analyzing...' : 'Get Recommendations'}
+                {loading ? 'Analyzing...' : 'Get Recommendations'}
               </button>
             </form>
           </div>

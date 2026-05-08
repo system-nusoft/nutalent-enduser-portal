@@ -698,4 +698,34 @@ export class AppService extends HttpService {
       throw prepareErrorResponse(error);
     }
   };
+
+  postGenerateTaskSummary = async (
+    baseAuthUrl: string,
+    data: any
+  ): Promise<any> => {
+    try {
+      const apiResponse = await this.post(
+        baseAuthUrl + ENDPOINTS.GENERATE_TASK_SUMMARY,
+        data
+      );
+      return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  };
+
+  postGenerateAndSaveTaskSummary = async (
+    baseAuthUrl: string,
+    data: any
+  ): Promise<any> => {
+    try {
+      const apiResponse = await this.post(
+        baseAuthUrl + ENDPOINTS.GENERATE_AND_SAVE_TASK_SUMMARY,
+        data
+      );
+      return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  };
 }

@@ -12,8 +12,6 @@ import { ProfileSuggestions } from "./profile-suggestions/ProfileSuggestions";
 import { TableSearch } from "./table-search/TableSearch";
 import { Table } from "./table/Table";
 import { Tag } from "./tags/Tags";
-import { TimesheetAIRewriter } from "./timesheet-ai-rewriter";
-import { TimesheetAIRewriterModal } from "./timesheet-ai-rewriter-modal";
 import { UploadFile } from "./upload-file";
 import ValidatedInput from "./validated-input";
 import { Welcome } from "./welcome";
@@ -32,8 +30,6 @@ export {
   Table,
   TableSearch,
   Tag,
-  TimesheetAIRewriter,
-  TimesheetAIRewriterModal,
   UploadFile,
   ValidatedInput,
   Welcome,

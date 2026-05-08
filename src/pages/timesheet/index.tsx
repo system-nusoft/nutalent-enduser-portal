@@ -24,8 +24,8 @@ interface props {
 interface query {
   page: number;
   limit?: number;
-  search?: string | undefined;
-  status?: TIMESHEET_STATUS;
+  search?: string | null | undefined;
+  status?: TIMESHEET_STATUS | null;
 }
 
 export const TimeSheet = ({}: props) => {
@@ -62,8 +62,12 @@ export const TimeSheet = ({}: props) => {
       title: <span className="ms-5">{t("table.column.startDate")}</span>,
       key: "startDate",
       dataIndex: "startDate",
-      render: (val: string) => {
+      render: (val: string | null | undefined) => {
+        if (!val) return <span className="ms-5">-</span>;
+        
         const date = new Date(val);
+        if (isNaN(date.getTime())) return <span className="ms-5">-</span>;
+        
         return (
           <span className="ms-5">
             {date.toLocaleDateString("en-US", {
@@ -79,8 +83,12 @@ export const TimeSheet = ({}: props) => {
       title: t("table.column.endDate"),
       key: "endDate",
       dataIndex: "endDate",
-      render: (val: string) => {
+      render: (val: string | null | undefined) => {
+        if (!val) return <span>-</span>;
+        
         const date = new Date(val);
+        if (isNaN(date.getTime())) return <span>-</span>;
+        
         return (
           <span>
             {date.toLocaleDateString("en-US", {
@@ -114,8 +122,12 @@ export const TimeSheet = ({}: props) => {
       title: t("table.column.createdAt"),
       key: "createdAt",
       dataIndex: "createdAt",
-      render: (val: string) => {
+      render: (val: string | null | undefined) => {
+        if (!val) return <span>-</span>;
+        
         const date = new Date(val);
+        if (isNaN(date.getTime())) return <span>-</span>;
+        
         return (
           <span>
             {date.toLocaleDateString("en-US", {
@@ -131,7 +143,7 @@ export const TimeSheet = ({}: props) => {
       title: t("table.column.status"),
       key: "status",
       dataIndex: "status",
-      render: (status: any) => (
+      render: (status: string | null | undefined) => (
         <>
           {status ? (
             <Tag label={status} tagType={status?.toString()?.toLowerCase()} />
@@ -144,19 +156,22 @@ export const TimeSheet = ({}: props) => {
     {
       title: t("table.column.action"),
       key: "action",
-      render: (_: unknown, record: { id: string }) => (
+      render: (_: unknown, record: { id?: string | null }) => (
         <>
           <Button
-            onClick={() => onClickRow(record)}
+            onClick={() => record?.id && onClickRow(record)}
             btn_class="transparent_btn"
             label={t("button.viewTimesheet")}
+            disabled={!record?.id}
           />
         </>
       ),
     },
   ];
 
-  const onClickRow = (record: { id: string }) => {
+  const onClickRow = (record: { id?: string | null }) => {
+    if (!record?.id) return;
+    
     const path = generatePath(`${record.id}`);
 
     navigate(path, {
@@ -179,24 +194,24 @@ export const TimeSheet = ({}: props) => {
       value: TIMESHEET_STATUS.APPROVED,
       label: TIMESHEET_STATUS.APPROVED,
       id: 1,
-      onClick: (val: any) => {
-        changeTab(val);
+      onClick: () => {
+        changeTab(TIMESHEET_STATUS.APPROVED);
       },
     },
     {
       value: TIMESHEET_STATUS.PENDING,
       label: TIMESHEET_STATUS.PENDING,
       id: 2,
-      onClick: (val: any) => {
-        changeTab(val);
+      onClick: () => {
+        changeTab(TIMESHEET_STATUS.PENDING);
       },
     },
     {
       value: TIMESHEET_STATUS.REVISION,
       label: TIMESHEET_STATUS.REVISION,
       id: 3,
-      onClick: (val: any) => {
-        changeTab(val);
+      onClick: () => {
+        changeTab(TIMESHEET_STATUS.REVISION);
       },
     },
   ];
@@ -233,7 +248,12 @@ export const TimeSheet = ({}: props) => {
       dispatch(
         RequestAppAction.handleGetTimesheetListing({
           id: id,
-          query: { ...query },
+          query: { 
+            page: query.page,
+            limit: query.limit,
+            search: query.search || undefined,
+            status: query.status || undefined
+          },
           cbSuccess: () => {
             cbSuccess && cbSuccess();
           },

@@ -98,7 +98,12 @@
     "endDateRequired": "End date is required.",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
-    "passwordInvalid": "Password is invalid"
+    "passwordInvalid": "Password is invalid",
+    "noWorkNotesAvailable": "No work notes available to generate summary",
+    "dateRangeRequired": "Date range is required for generating summary",
+    "configurationError": "Configuration error. Please contact support.",
+    "summaryGenerationFailed": "Failed to generate summary. Please try again.",
+    "inquiryFailed": "Failed to send inquiry. Please try again."
   },
   "card": {
     "heading": {
@@ -173,7 +178,8 @@
     "confirmPayment": "Confirm Payment",
     "backToInterview": "Go to Interviews",
     "changeStatus": "Change Status",
-    "closeEngagement": "Close Engagement"
+    "closeEngagement": "Close Engagement",
+    "generateAISummary": "Generate AI Summary"
   },
   "accordian": {
     "feedbackFrom": "Feedback From",
@@ -196,7 +202,8 @@
     "addDepositAmount": "Add deposit amount",
     "poweredByAI": "Powered By AI",
     "firstName": "John",
-    "lastName": "Doe"
+    "lastName": "Doe",
+    "taskSummary": "Enter a comprehensive summary of all tasks completed during this period..."
   },
   "labels": {
     "upload": "Upload",
@@ -305,6 +312,7 @@
     "endDate": "End Date",
     "startDate": "Start Date",
     "commentsFrom": "Revision Notes",
+    "taskSummary": "Task Summary",
     "monthlyHours": "Monthly Hours",
     "monthlyRate": "Monthly Rate",
     "hiredResources": "Hired Resources",
@@ -438,7 +446,9 @@
     "smartSchedulerFailed": "Could not fetch smart suggestions. Please try again or select a slot manually",
     "smartSchedulerBusy": "Smart scheduling is busy right now. Please try again or select a slot manually",
     "interviewInFuture": "Interview Time should be in Future",
-    "monthlyResourcesPercentage": "*{{type}} last month"
+    "monthlyResourcesPercentage": "*{{type}} last month",
+    "summaryGenerated": "AI summary generated successfully",
+    "inquirySent": "Inquiry sent successfully!"
   },
   "project": {
     "createProjectDesc": "Provide the Project Details to create and kickstart a new initiative",
@@ -451,6 +461,20 @@
     "endEngagementParagraph": "Once this Engagement concludes, you will no longer be able to perform any Resource-related operations",
     "emptyProject": "A hyphen '-' indicates the Resource is not currently engaged in any project"
   },
+  "aiChatbot": {
+    "analyzing": "Analyzing your project requirements and matching available resources...",
+    "findingTalent": "Finding the best-matched talent from our database... Almost there!",
+    "calculatingScores": "Calculating match scores and finalizing recommendations...",
+    "preparingCards": "Preparing resource cards with detailed profiles...",
+    "inquiryMessage": "I am interested in learning more about your expertise and availability for potential collaboration.",
+    "summaryMessage": "Based on your requirements, I found {{teamSize}} recommended {{roleText}} with {{totalResources}} matching {{resourceText}} from our database.",
+    "role": "role",
+    "roles": "roles",
+    "resource": "resource",
+    "resources": "resources",
+    "showingTalent": "Showing real-time talent matched to your needs with availability and match scores.",
+    "errorMessage": "Sorry, I encountered an error: {{error}}. Please try again.",
+    "defaultError": "Unable to process your request"
   "chatbot": {
     "pricingNoRole": "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?",
     "fallbackHelp": "I can help you plan a project team or compare hiring rates. Try describing your project, or ask about rates for a specific role.",

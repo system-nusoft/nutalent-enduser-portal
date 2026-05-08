@@ -8,7 +8,7 @@ import moment from "moment-timezone";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Clock, Earth, Telephone } from "src/assets";
 import { Button, Notification } from "src/components";
 import CustomCalendar from "src/components/calender/Calender";
@@ -50,7 +50,8 @@ export const ScheduledInterview = () => {
   const { t } = useTranslation();
   const [selectedDay, setIsExpanded] = useState<any>(null);
   const location = useLocation();
-  const id = location?.state?.data?.id; // resource id
+  const { id: urlId } = useParams<{ id: string }>();
+  const id = urlId || location?.state?.data?.id; // resource id from URL params or state
   const interviewDetails: any = useSelector(getInterviewDetailsData);
   const params = new URLSearchParams(location.search);
   const timezone = params.get("timezone");
@@ -516,6 +517,49 @@ export const ScheduledInterview = () => {
       dispatch(clearSmartSchedulerSlots());
     };
   }, []);
+
+  // Watch for resource ID changes and refetch interview details
+  useEffect(() => {
+    // Reset state when resource ID changes
+    setIsExpanded(null);
+    setSelectedTime(null);
+    setPrevSelectedTime(null);
+    setSuccess(false);
+    
+    if (id && timeZones.length > 0) {
+      dispatch(
+        RequestAppAction.handleGetInterviewDetails({
+          id: id,
+          data: {
+            timeZone:
+              previousSelectedTimeZone ??
+              selectedTimeZone ??
+              timeZones[0]?.timezone,
+          },
+          cbSuccess: (res) => {
+            if (timezone) {
+              const interviewBookingResDetails = res?.data;
+              const interviewBooking = interviewBookingResDetails?.interviewBooking;
+
+              if (Array.isArray(interviewBooking)) {
+                const booking = interviewBooking.find(
+                  (booking: any) => booking.day === selectedDay
+                );
+
+                if (booking) {
+                  setPrevSelectedTime([booking]);
+                  setSelectedTime(null);
+                }
+              }
+            }
+          },
+          cbFailure: () => {
+            navigate(-1);
+          },
+        })
+      );
+    }
+  }, [id]); // Only depends on ID to refetch when it changes
 
   const buttons = [];
 

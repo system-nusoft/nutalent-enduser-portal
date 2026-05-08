@@ -5,17 +5,18 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AlertTriangle, TickGreen } from "src/assets";
-import { Button, Input, Table, Tag, TimesheetAIRewriterModal } from "src/components";
+import { Button, Input, Table, Tag } from "src/components";
 import { DialogBox } from "src/components/modal/Modal";
+import { Notification } from "src/components";
 import { PrivatePageTemplate } from "src/components/private-page-template/PrivatePageTemplate";
 import { ROUTES } from "src/constants/navigation-routes";
+import { AppService } from "src/services/app";
 import {
   getTimesheetData,
   timesheetLoading,
 } from "src/store/selectors/features/timesheet-selector";
 import RequestAppAction from "src/store/slices/app-actions";
 import { modalProps, TIMESHEET_STATUS } from "src/utils/enum";
-import { AISummaryStorage } from "src/utils/ai-summary-storage";
 import styles from "./styles.module.scss";
 interface props {
   title: string;
@@ -42,7 +43,8 @@ export const ViewTimesheet = ({}: props) => {
   const dispatch = useDispatch();
   const [inputComments, setInputComments] = useState("");
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-  const [generatedSummary, setGeneratedSummary] = useState("");
+  const [taskSummary, setTaskSummary] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   useEffect(() => {
     dispatch(
@@ -53,26 +55,135 @@ export const ViewTimesheet = ({}: props) => {
         },
       })
     );
+  }, [timesheetId, dispatch]);
 
-    // Load persisted AI summary from localStorage
-    if (timesheetId) {
-      const persistedSummary = AISummaryStorage.getSummary(timesheetId);
-      if (persistedSummary) {
-        setGeneratedSummary(persistedSummary.aiGeneratedSummary);
+  const onGenerateTaskSummary = async (): Promise<void> => {
+    setIsGeneratingSummary(true);
+    
+    // Validate timesheet data exists
+    if (!timesheetData?.TimesheetRevision || !Array.isArray(timesheetData.TimesheetRevision) || timesheetData.TimesheetRevision.length === 0) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    const currentRevision = timesheetData.TimesheetRevision[0];
+    
+    // Validate current revision exists
+    if (!currentRevision) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+    
+    // Collect work notes from timesheet details
+    const workNotes = currentRevision?.details?.map((item: any) => ({
+      date: item?.date ? dayjs(item.date).format("YYYY-MM-DD") : "",
+      workNotes: item?.workNotes ?? "",
+      hours: Number(item?.hours) || 0,
+    })).filter((item: any) => item?.workNotes?.trim()?.length > 0) || [];
+
+    // Validate work notes exist
+    if (!workNotes || workNotes.length === 0) {
+      Notification({
+        type: "error",
+        message: t("error.noWorkNotesAvailable")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Validate base URL
+    const baseUrl: string | undefined = process.env.REACT_APP_BASE_URL;
+    if (!baseUrl) {
+      Notification({
+        type: "error",
+        message: t("error.configurationError")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Validate timesheetId exists
+    if (!timesheetId) {
+      Notification({
+        type: "error",
+        message: t("error.configurationError")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    // Get date range from work notes
+    const dates = workNotes.map((note: any) => note?.date).filter((date: string) => date).sort();
+    const startDate = dates?.[0];
+    const endDate = dates?.[dates.length - 1];
+
+    // Validate dates exist
+    if (!startDate || !endDate) {
+      Notification({
+        type: "error",
+        message: t("error.dateRangeRequired")
+      });
+      setIsGeneratingSummary(false);
+      return;
+    }
+
+    try {
+      const appService = new AppService();
+      const response = await appService.postGenerateAndSaveTaskSummary(baseUrl, {
+        timesheetId: timesheetId,
+        workNotes,
+        projectName: timesheetData?.Engagement?.Project?.name ?? "Project",
+        timesheetPeriod: `${dayjs(startDate).format("MMM DD, YYYY")} - ${dayjs(endDate).format("MMM DD, YYYY")}`,
+      });
+
+      const generatedSummary = response?.data?.taskSummary ?? "";
+      
+      if (generatedSummary) {
+        setTaskSummary(generatedSummary);
       }
       
-      // Clean up expired summaries on mount
-      AISummaryStorage.clearExpiredSummaries();
+      // Refresh timesheet data to get the updated summary from database
+      dispatch(
+        RequestAppAction.handleGetTimesheetById({
+          id: timesheetId,
+          cbSuccess: () => {
+            Notification({
+              type: "success",
+              message: t("notification.summaryGenerated")
+            });
+          },
+        })
+      );
+    } catch (error: unknown) {
+      const errorMessage = (error as any)?.data?.message ?? t("error.summaryGenerationFailed");
+      Notification({
+        type: "error",
+        message: errorMessage
+      });
+    } finally {
+      setIsGeneratingSummary(false);
     }
-  }, [timesheetId, dispatch]);
+  };
 
   const columns: any = [
     {
       title: <span className="ms-5">{t("table.column.date")}</span>,
       key: "date",
       dataIndex: "date",
-      render: (name: string) => {
-        const date = new Date(name);
+      render: (val: string | null | undefined) => {
+        if (!val) return <span className="ms-5">-</span>;
+        
+        const date = new Date(val);
+        if (isNaN(date.getTime())) return <span className="ms-5">-</span>;
+        
         return (
           <span className="ms-5">
             {date.toLocaleDateString("en-US", {
@@ -99,8 +210,8 @@ export const ViewTimesheet = ({}: props) => {
       title: t("table.column.workNotes"),
       key: "workNotes",
       dataIndex: "workNotes",
-      render: (name: string) => {
-        return <span>{name ? name : "-"}</span>;
+      render: (val: string | null | undefined) => {
+        return <span>{val ? val : "-"}</span>;
       },
     },
   ];
@@ -318,54 +429,37 @@ export const ViewTimesheet = ({}: props) => {
                 </div>
               </div>
 
-<div className="white-container w-full col-span-2">
-                <div className="flex flex-col gap-4">
-                  {/* AI Section Header */}
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <span className="text-2xl">✨</span>
-                    <h3 className="text-lg font-semibold text-gray-800">AI-Powered Summary Enhancement</h3>
-                  </div>
-
-                  {/* AI Rewriter Button */}
-                  <TimesheetAIRewriterModal
-                    initialSummary={
-                      Array.isArray(timesheetData?.TimesheetRevision)
-                        ? timesheetData?.TimesheetRevision[0]?.notes || ""
-                        : ""
-                    }
-                    timesheetId={timesheetId || undefined}
-                    onSummaryGenerated={(summary) => setGeneratedSummary(summary)}
-                  />
-                  
-                  {/* Generated Summary Card with AI Styling */}
-                  {generatedSummary && (
-                    <div className="relative overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 shadow-sm">
-                      {/* AI Badge */}
-                      <div className="absolute top-3 right-3">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-sm">
-                          <span>✨</span>
-                          AI Generated
-                        </span>
+{Array.isArray(timesheetData?.TimesheetRevision) && 
+                timesheetData.TimesheetRevision.length > 0 && 
+                timesheetData.TimesheetRevision[0] &&
+                (timesheetData.TimesheetRevision[0]?.taskSummary?.trim() || 
+                 (timesheetData?.status !== TIMESHEET_STATUS.APPROVED && !timesheetData.TimesheetRevision[0]?.taskSummary?.trim())) && (
+                <div className="white-container w-full col-span-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold">
+                        {t("labels.taskSummary")}
                       </div>
-                      
-                      {/* Content */}
-                      <div className="p-5 pt-12">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-6 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-                          <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Enhanced Summary</h4>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-indigo-100">
-                          <p className="text-gray-800 leading-relaxed">{generatedSummary}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Decorative Elements */}
-                      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-purple-200/30 to-transparent rounded-tl-full"></div>
-                      <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-indigo-200/30 to-transparent rounded-br-full"></div>
+                      {timesheetData?.status !== TIMESHEET_STATUS.APPROVED && 
+                       timesheetData?.TimesheetRevision?.[0] && 
+                       !timesheetData.TimesheetRevision[0]?.taskSummary?.trim() && (
+                        <Button
+                          btn_Type="button"
+                          btn_class="filled_btn"
+                          onClick={onGenerateTaskSummary}
+                          label={t("button.generateAISummary")}
+                          disabled={isGeneratingSummary}
+                        />
+                      )}
                     </div>
-                  )}
+                    {(timesheetData?.TimesheetRevision?.[0]?.taskSummary?.trim() || taskSummary?.trim()) && (
+                      <div className={`max-h-[10rem] min-h-[3rem] overflow-auto ${styles.card_desc}`}>
+                        {taskSummary?.trim() || timesheetData?.TimesheetRevision?.[0]?.taskSummary}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </>
         </div>

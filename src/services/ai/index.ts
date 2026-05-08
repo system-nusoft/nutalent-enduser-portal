@@ -31,6 +31,29 @@ export interface IdentifyRolesResponse {
   keyConsiderations: string[];
 }
 
+// Quick endpoint interfaces with resource matching
+export interface MatchingResource {
+  id: string;
+  fullName: string;
+  title: string;
+  skills: string[];
+  yearsOfExperience: number;
+  availableStatus: string;
+  matchScore: number;
+  profilePicture?: string;
+}
+
+export interface RoleWithResources {
+  role: Role;
+  matchingResources: MatchingResource[];
+}
+
+export interface IdentifyRolesQuickResponse {
+  roles: RoleWithResources[];
+  totalEstimatedTeamSize: number;
+  totalMatchingResources: number;
+}
+
 export interface ResourceProfile {
   id: string;
   name: string;
@@ -163,6 +186,37 @@ export class AiService extends HttpService {
     }
   }
 
+  async identifyRolesQuick(
+    baseUrl: string,
+    data: IdentifyRolesRequest
+  ): Promise<IdentifyRolesQuickResponse> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+    
+    if (!data?.projectDescription?.trim()) {
+      throw new Error('Project description is required');
+    }
+
+    try {
+      // AI endpoints can take significant time, set timeout to 2 minutes for safety
+      const apiResponse = await this.post(`${baseUrl}ai/identify-roles/quick`, data, undefined, 120000);
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      
+      // prepareResponseObject wraps data in response.data
+      const responseData = response?.data || response;
+      
+      // Validate response structure
+      if (!responseData?.roles || !Array.isArray(responseData.roles)) {
+        throw new Error('Invalid response: roles array is required');
+      }
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
   async classifyIntent(
     baseUrl: string,
     query: string
@@ -228,7 +282,6 @@ export class AiService extends HttpService {
     }
   }
 
-  
   async rewriteTimesheet(
     baseUrl: string,
     data: RewriteTimesheetRequest

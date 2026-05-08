@@ -29,6 +29,8 @@ const ENDPOINTS = {
   INTERVIEW_DETAILS: (id: string) =>
     `end-user/resource/${id}/interview-details`,
   UPDATE_SCHEDULE_INTERVIEW: (id: string) => `resource/${id}/interview-details`,
+  GENERATE_TASK_SUMMARY: `ai/generate-task-summary`,
+  GENERATE_AND_SAVE_TASK_SUMMARY: `ai/generate-and-save-task-summary`,
   SMART_SCHEDULER_SUGGEST_SLOTS: "smart-scheduler/suggest-slots",
   USER: "user",
   UPLOAD_IMAGE: "upload-image",
@@ -51,9 +53,6 @@ const ENDPOINTS = {
   ALL_ENGAGEMENTS: () => `engagement`,
   PATCH_ENGAGEMENTS: (id: string) => `engagement/${id}/status`,
   AI_IDENTIFY_ROLES: `ai/identify-roles`,
-  AI_REWRITE_TIMESHEET: `ai/rewrite-timesheet`,
-  AI_TIMESHEET_SUGGESTIONS: (timesheetId: string) => `ai/timesheet-suggestions/${timesheetId}`,
-  AI_SAVE_SUMMARY: `ai/save-ai-summary`,
 };
 
 export default ENDPOINTS;

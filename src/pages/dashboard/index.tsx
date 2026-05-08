@@ -269,7 +269,7 @@ export const Dashboard: React.FC = () => {
                   src={user?.profilePicture ? user?.profilePicture : undefined}
                   size={25}
                 >
-                  {user?.name?.charAt(0)}
+                  {user?.firstName?.charAt(0) || user?.name?.charAt(0) || 'U'}
                 </Avatar>
               </div>
             ) : (
@@ -302,7 +302,7 @@ export const Dashboard: React.FC = () => {
                     }
                     className="me-2"
                   >
-                    {user?.firstName?.charAt(0)}
+                    {user?.firstName?.charAt(0) || user?.name?.charAt(0) || 'U'}
                   </Avatar>
                   <Typography.Text className={styles.user_name_text}>
                     {(user?.firstName ?? "") + " " + (user?.lastName ?? "")}
