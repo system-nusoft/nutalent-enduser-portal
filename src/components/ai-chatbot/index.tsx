@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role } from 'src/services/ai';
 import { EngagementService } from 'src/services/engagement';
 import { ResourceCard } from './ResourceCard';
 import { ROUTES } from 'src/constants/navigation-routes';
 import { Notification } from 'src/components';
+import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
 import styles from './styles.module.scss';
 
 enum MessageRole {
@@ -22,6 +24,7 @@ interface Message {
 
 export const AIChatbot: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -46,18 +49,18 @@ export const AIChatbot: React.FC = () => {
       const elapsed = Date.now() - loadingStartTime;
       const seconds = Math.floor(elapsed / 1000);
       
-      let message = 'Analyzing your project requirements and matching available resources...';
+      let message = t('aiChatbot.analyzing');
       
       if (seconds >= 5) {
-        message = 'Finding the best-matched talent from our database... Almost there!';
+        message = t('aiChatbot.findingTalent');
       }
       
       if (seconds >= 10) {
-        message = 'Calculating match scores and finalizing recommendations...';
+        message = t('aiChatbot.calculatingScores');
       }
       
       if (seconds >= 15) {
-        message = 'Preparing resource cards with detailed profiles...';
+        message = t('aiChatbot.preparingCards');
       }
 
       setMessages(prev => prev.map(msg => 
@@ -95,28 +98,30 @@ export const AIChatbot: React.FC = () => {
 
   const handleViewTimesheet = async (resourceId: string) => {
     try {
-      // First, get engagements to find the engagement ID for this resource
-      const baseUrl = process.env.REACT_APP_BASE_URL || '';
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        console.error('Base URL not configured');
+        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
+        return;
+      }
+
       const response = await engagementService.getEngagements(baseUrl, 1, 10);
       
       const engagements = response?.data?.items || [];
       
-      // Find engagement for this resource
+      // Find engagement for this resource using enum
       const engagement = engagements.find((eng: any) => 
-        eng.resource?.id === resourceId && eng.hiringStatus === 'Active'
+        eng?.resource?.id === resourceId && eng?.hiringStatus === ENGAGEMENTS_STATUS.ACTIVE
       );
       
-      if (engagement) {
-        // Navigate to timesheet page with engagement ID
-        navigate(`/engagements/${engagement.id}/timesheets`);
+      if (engagement?.id) {
+        navigate(ROUTES.VIEW_TIMESHEET.replace(':engagementId', engagement.id).replace(':resourceId', resourceId));
       } else {
-        // Fallback to old method if no active engagement found
         console.log('No active engagement found for resource:', resourceId);
         navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
       }
     } catch (error) {
       console.error('Error fetching engagements:', error);
-      // Fallback to old method on error
       navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
     }
   };
@@ -129,24 +134,30 @@ export const AIChatbot: React.FC = () => {
 
   const handleSendInquiry = async (resourceId: string) => {
     try {
-      const baseUrl = process.env.REACT_APP_BASE_URL || '';
-      const message = 'I am interested in learning more about your expertise and availability for potential collaboration.';
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        Notification({
+          type: 'error',
+          message: t('error.configurationError')
+        });
+        return;
+      }
+
+      const message = t('aiChatbot.inquiryMessage');
       
       await engagementService.sendMessage(baseUrl, resourceId, message);
       
-      // Show success notification
       Notification({
         type: 'success',
-        message: 'Inquiry sent successfully!'
+        message: t('notification.inquirySent')
       });
       
-      // Redirect to inquiries page on success
       navigate(ROUTES.INQUIRIES);
     } catch (error) {
       console.error('Error sending inquiry:', error);
       Notification({
         type: 'error',
-        message: 'Failed to send inquiry. Please try again.'
+        message: t('error.inquiryFailed')
       });
     }
   };
@@ -199,14 +210,17 @@ export const AIChatbot: React.FC = () => {
 
     const loadingMessage: Message = {
       role: MessageRole.ASSISTANT,
-      content: 'Analyzing your project requirements and matching available resources...',
+      content: t('aiChatbot.analyzing'),
       timestamp: new Date(),
       isLoading: true
     };
     setMessages(prev => [...prev, loadingMessage]);
 
     try {
-      const baseUrl = process.env.REACT_APP_BASE_URL || '';
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        throw new Error(t('error.configurationError'));
+      }
       const extractedReqs = extractRequirements();
       const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
 
@@ -231,8 +245,13 @@ export const AIChatbot: React.FC = () => {
       const totalResources = response?.totalMatchingResources ?? 0;
 
       // Create summary message
-      let summaryContent = `Based on your requirements, I found ${teamSize} recommended ${teamSize === 1 ? 'role' : 'roles'} with ${totalResources} matching ${totalResources === 1 ? 'resource' : 'resources'} from our database.\n\n`;
-      summaryContent += `Showing real-time talent matched to your needs with availability and match scores.`;
+      let summaryContent = t('aiChatbot.summaryMessage', { 
+        teamSize, 
+        roleText: teamSize === 1 ? t('aiChatbot.role') : t('aiChatbot.roles'),
+        totalResources,
+        resourceText: totalResources === 1 ? t('aiChatbot.resource') : t('aiChatbot.resources')
+      });
+      summaryContent += `\n\n${t('aiChatbot.showingTalent')}`;
 
       const assistantMessage: Message = {
         role: MessageRole.ASSISTANT,
@@ -247,7 +266,7 @@ export const AIChatbot: React.FC = () => {
       
       const errorMessage: Message = {
         role: MessageRole.ASSISTANT,
-        content: `Sorry, I encountered an error: ${error?.message || 'Unable to process your request'}. Please try again.`,
+        content: t('aiChatbot.errorMessage', { error: error?.message || t('aiChatbot.defaultError') }),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);

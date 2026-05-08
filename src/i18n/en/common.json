@@ -95,10 +95,11 @@
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
     "passwordInvalid": "Password is invalid",
-    "noWorkNotesAvailable": "Please add work notes before generating summary",
-    "summaryGenerationFailed": "Failed to generate AI summary. Please try again.",
+    "noWorkNotesAvailable": "No work notes available to generate summary",
     "dateRangeRequired": "Date range is required for generating summary",
-    "configurationError": "Configuration error. Please contact support."
+    "configurationError": "Configuration error. Please contact support.",
+    "summaryGenerationFailed": "Failed to generate summary. Please try again.",
+    "inquiryFailed": "Failed to send inquiry. Please try again."
   },
   "card": {
     "heading": {
@@ -436,7 +437,8 @@
     "selectTimeslot": "Please select a Timeslot",
     "interviewInFuture": "Interview Time should be in Future",
     "monthlyResourcesPercentage": "*{{type}} last month",
-    "summaryGenerated": "AI summary generated successfully"
+    "summaryGenerated": "AI summary generated successfully",
+    "inquirySent": "Inquiry sent successfully!"
   },
   "project": {
     "createProjectDesc": "Provide the Project Details to create and kickstart a new initiative",
@@ -448,5 +450,20 @@
     "endEngagementHeading": "Are you sure you want to end this Engagement?",
     "endEngagementParagraph": "Once this Engagement concludes, you will no longer be able to perform any Resource-related operations",
     "emptyProject": "A hyphen '-' indicates the Resource is not currently engaged in any project"
+  },
+  "aiChatbot": {
+    "analyzing": "Analyzing your project requirements and matching available resources...",
+    "findingTalent": "Finding the best-matched talent from our database... Almost there!",
+    "calculatingScores": "Calculating match scores and finalizing recommendations...",
+    "preparingCards": "Preparing resource cards with detailed profiles...",
+    "inquiryMessage": "I am interested in learning more about your expertise and availability for potential collaboration.",
+    "summaryMessage": "Based on your requirements, I found {{teamSize}} recommended {{roleText}} with {{totalResources}} matching {{resourceText}} from our database.",
+    "role": "role",
+    "roles": "roles",
+    "resource": "resource",
+    "resources": "resources",
+    "showingTalent": "Showing real-time talent matched to your needs with availability and match scores.",
+    "errorMessage": "Sorry, I encountered an error: {{error}}. Please try again.",
+    "defaultError": "Unable to process your request"
   }
 }

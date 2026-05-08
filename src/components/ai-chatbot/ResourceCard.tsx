@@ -42,29 +42,29 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
       <div className={styles.header}>
         <div className={styles.profileSection}>
           <Avatar
-            src={resource.profilePicture}
+            src={resource?.profilePicture}
             size={48}
             className={styles.avatar}
           >
-            {resource.fullName.charAt(0).toUpperCase()}
+            {resource?.fullName?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
           <div className={styles.info}>
-            <h4 className={styles.name}>{resource.fullName}</h4>
-            <p className={styles.title}>{resource.title}</p>
+            <h4 className={styles.name}>{resource?.fullName || 'Unknown'}</h4>
+            <p className={styles.title}>{resource?.title || 'N/A'}</p>
           </div>
         </div>
         <div className={styles.badges}>
           <div 
             className={styles.matchScore}
-            style={{ backgroundColor: getMatchScoreColor(resource.matchScore) }}
+            style={{ backgroundColor: getMatchScoreColor(resource?.matchScore ?? 0) }}
           >
-            {resource.matchScore}% Match
+            {resource?.matchScore ?? 0}% Match
           </div>
           <div
             className={styles.availability}
-            style={{ borderColor: getAvailabilityColor(resource.availableStatus) }}
+            style={{ borderColor: getAvailabilityColor(resource?.availableStatus ?? 'unavailable') }}
           >
-            {resource.availableStatus}
+            {resource?.availableStatus || 'N/A'}
           </div>
         </div>
       </div>
@@ -72,18 +72,18 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
       <div className={styles.details}>
         <div className={styles.experience}>
           <span className={styles.label}>Experience:</span>
-          <span className={styles.value}>{resource.yearsOfExperience} years</span>
+          <span className={styles.value}>{resource?.yearsOfExperience ?? 0} years</span>
         </div>
         
         <div className={styles.skills}>
           <span className={styles.label}>Skills:</span>
           <div className={styles.skillsList}>
-            {resource.skills.slice(0, 5).map((skill, idx) => (
+            {resource?.skills?.slice(0, 5)?.map((skill, idx) => (
               <span key={idx} className={styles.skillTag}>
                 {skill}
               </span>
-            ))}
-            {resource.skills.length > 5 && (
+            )) || <span>No skills listed</span>}
+            {resource?.skills && resource.skills.length > 5 && (
               <span className={styles.skillTag}>+{resource.skills.length - 5} more</span>
             )}
           </div>
@@ -92,26 +92,30 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
 
       <div className={styles.actions}>
         <button
-          onClick={() => onScheduleInterview(resource.id)}
+          onClick={() => resource?.id && onScheduleInterview(resource.id)}
           className={`${styles.actionBtn} ${styles.primary}`}
+          disabled={!resource?.id}
         >
           Schedule Interview
         </button>
         <button
-          onClick={() => onViewDetails(resource.id)}
+          onClick={() => resource?.id && onViewDetails(resource.id)}
           className={`${styles.actionBtn} ${styles.secondary}`}
+          disabled={!resource?.id}
         >
           View Details
         </button>
         <button
-          onClick={() => onSendInquiry(resource.id)}
+          onClick={() => resource?.id && onSendInquiry(resource.id)}
           className={`${styles.actionBtn} ${styles.secondary}`}
+          disabled={!resource?.id}
         >
           Send Inquiry
         </button>
         <button
-          onClick={() => onViewTimesheet(resource.id)}
+          onClick={() => resource?.id && onViewTimesheet(resource.id)}
           className={`${styles.actionBtn} ${styles.secondary}`}
+          disabled={!resource?.id}
         >
           View Timesheet
         </button>
