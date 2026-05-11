@@ -1,5 +1,6 @@
 import React from 'react';
-import { Avatar } from 'antd';
+import { Avatar, Tooltip } from 'antd';
+import { CalendarOutlined, EyeOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { MatchingResource } from 'src/services/ai';
 import styles from './ResourceCard.module.scss';
 
@@ -78,7 +79,6 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
         <div className={styles.skills}>
           <span className={styles.label}>Skills:</span>
           <div className={styles.skillsList}>
-            {/* TODO: Backend should limit skills to top 5 most relevant */}
             {resource?.skills && resource.skills.length > 0 ? (
               <>
                 {resource.skills.slice(0, 5).map((skill, idx) => (
@@ -98,34 +98,58 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
       </div>
 
       <div className={styles.actions}>
-        <button
-          onClick={() => resource?.id && onScheduleInterview(resource.id)}
-          className={`${styles.actionBtn} ${styles.primary}`}
-          disabled={!resource?.id}
-        >
-          Schedule Interview
-        </button>
-        <button
-          onClick={() => resource?.id && onViewDetails(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          View Details
-        </button>
-        <button
-          onClick={() => resource?.id && onSendInquiry(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          Send Inquiry
-        </button>
-        <button
-          onClick={() => resource?.id && onViewTimesheet(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          View Timesheet
-        </button>
+        <Tooltip title="Schedule Interview" placement="top">
+          <button
+            onClick={() => {
+              console.log('Schedule Interview clicked for resource:', resource?.id);
+              resource?.id && onScheduleInterview(resource.id);
+            }}
+            className={`${styles.iconBtn} ${styles.primary}`}
+            disabled={!resource?.id}
+            aria-label="Schedule Interview"
+          >
+            <CalendarOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title="View Details" placement="top">
+          <button
+            onClick={() => {
+              console.log('View Details clicked for resource:', resource?.id);
+              resource?.id && onViewDetails(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="View Details"
+          >
+            <EyeOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title="Send Inquiry" placement="top">
+          <button
+            onClick={() => {
+              console.log('Send Inquiry clicked for resource:', resource?.id);
+              resource?.id && onSendInquiry(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="Send Inquiry"
+          >
+            <SendOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title="View Timesheet" placement="top">
+          <button
+            onClick={() => {
+              console.log('View Timesheet clicked for resource:', resource?.id);
+              resource?.id && onViewTimesheet(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="View Timesheet"
+          >
+            <ClockCircleOutlined />
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

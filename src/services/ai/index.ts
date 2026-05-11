@@ -154,6 +154,68 @@ export interface SaveAISummaryResponse {
   };
 }
 
+// Unified endpoint interfaces
+export interface ResourceWithPricing {
+  id: string;
+  fullName: string;
+  title: string;
+  skills: string[];
+  yearsOfExperience: number;
+  availableStatus: string;
+  matchScore: number;
+  profilePicture?: string;
+  hourlyRate: number;
+  derivedLevel: string;
+  profileSummary?: string;
+}
+
+export interface PricingLevel {
+  level: string;
+  marketRate: {
+    min: number;
+    avg: number;
+    max: number;
+  };
+  detectedRegion: string;
+  ourRates: {
+    min: number;
+    avg: number;
+    max: number;
+  };
+  isCheaper: boolean;
+  savings: number;
+  savingsPercent: number;
+  resourceCount: number;
+  resources: ResourceWithPricing[];
+}
+
+export interface RoleWithPricingDetails {
+  title: string;
+  seniorityLevel: string;
+  skills: string[];
+  priority: string;
+  reasoning: string;
+  pricingLevels: PricingLevel[];
+  totalAvailableResources: number;
+  pricingSummary: string;
+}
+
+export interface UnifiedRolesWithPricingRequest {
+  projectDescription: string;
+  location?: string;
+  budget?: string;
+  requirements?: string[];
+}
+
+export interface UnifiedRolesWithPricingResponse {
+  roles: RoleWithPricingDetails[];
+  totalEstimatedTeamSize: number;
+  keyConsiderations: string[];
+  totalMatchingResources: number;
+  userLocation: string;
+  overallSavingsSummary: string;
+}
+
 export class AiService extends HttpService {
   async identifyRoles(
     baseUrl: string,
@@ -365,6 +427,41 @@ export class AiService extends HttpService {
       
       if (!responseData?.success) {
         throw new Error('Failed to save AI summary');
+      }
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async identifyRolesWithPricing(
+    baseUrl: string,
+    data: UnifiedRolesWithPricingRequest
+  ): Promise<UnifiedRolesWithPricingResponse> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+    
+    if (!data?.projectDescription?.trim()) {
+      throw new Error('Project description is required');
+    }
+
+    try {
+      // This endpoint combines role identification, resource matching, and pricing
+      // Timeout set to 180s (3 minutes) due to AI processing + database queries + pricing calculations
+      const apiResponse = await this.post(
+        `${baseUrl}ai/identify-roles-with-pricing`,
+        data,
+        undefined,
+        180000
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      
+      const responseData = response?.data || response;
+      
+      if (!responseData?.roles || !Array.isArray(responseData.roles)) {
+        throw new Error('Invalid response: roles array is required');
       }
       
       return responseData;

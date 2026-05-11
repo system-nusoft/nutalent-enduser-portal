@@ -1,14 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AiService, IdentifyRolesRequest, RoleWithResources, MatchingResource, Role, PricingResult } from 'src/services/ai';
-import { EngagementService } from 'src/services/engagement';
+import { Tooltip } from 'antd';
 import { ResourceCard } from './ResourceCard';
-import { ROUTES } from 'src/constants/navigation-routes';
-import { Notification } from 'src/components';
-import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
+import { useNavigate } from 'react-router-dom';
 import styles from './styles.module.scss';
-import { CLASSIFICATION_INTENT } from 'src/utils/enum';
+import { AiService } from 'src/services/ai';
+import { EngagementService } from 'src/services/engagement';
+import { Notification } from 'src/components';
+import { ROUTES } from 'src/constants/navigation-routes';
+import { ENGAGEMENTS_STATUS, CLASSIFICATION_INTENT } from 'src/utils/enum';
+import {
+  UnifiedRolesWithPricingRequest,
+  UnifiedRolesWithPricingResponse,
+  ResourceWithPricing,
+  PricingLevel,
+  RoleWithPricingDetails,
+  RoleWithResources,
+  PricingResult,
+  Role
+} from 'src/services/ai';
 
 enum MessageRole {
   USER = 'user',
@@ -22,6 +32,7 @@ interface Message {
   isLoading?: boolean;
   rolesWithResources?: RoleWithResources[];
   pricingData?: PricingResult[];
+  unifiedData?: UnifiedRolesWithPricingResponse;
 }
 
 export const AIChatbot: React.FC = () => {
@@ -41,9 +52,23 @@ export const AIChatbot: React.FC = () => {
   const aiService = new AiService();
   const engagementService = new EngagementService();
 
+  const messageSuggestions = [
+    "Build a mobile app like Instagram",
+    "E-commerce platform with AI recommendations",
+    "Real-time collaboration tool for teams",
+    "Healthcare patient management system"
+  ];
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Debug: Check if suggestions should be visible
+  useEffect(() => {
+    console.log('Messages length:', messages.length);
+    console.log('Should show suggestions:', messages.length > 0);
+    console.log('Message suggestions:', messageSuggestions);
+  }, [messages.length]);
 
   // Update loading message based on elapsed time
   useEffect(() => {
@@ -286,116 +311,35 @@ export const AIChatbot: React.FC = () => {
       if (!baseUrl) {
         throw new Error(t('error.configurationError'));
       }
+      
       const extractedReqs = extractRequirements();
       const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
 
-      const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
-
-      const requestData: IdentifyRolesRequest = {
+      // Use unified endpoint - single API call for roles + resources + pricing
+      const response = await aiService.identifyRolesWithPricing(baseUrl, {
         projectDescription: input,
-        requirements: finalRequirements,
+        location: userLocation,
         budget: budget || undefined,
-        timeline: timeline || undefined
-      };
-
-      // Use quick endpoint for faster response with resource matching
-      const response: any = await aiService.identifyRolesQuick(baseUrl, requestData);
+        requirements: allRequirements.length > 0 ? allRequirements : undefined
+      });
 
       setMessages(prev => prev.filter(msg => !msg.isLoading));
 
+      // Create summary message with savings info
+      let summaryContent = `${response.overallSavingsSummary}\n\nFound ${response.totalEstimatedTeamSize} recommended roles with ${response.totalMatchingResources} matching resources.`;
       
-      // Safety checks for response data - Quick endpoint returns roles with resources
-      const rolesWithResources = response?.roles || [];
-      const teamSize = response?.totalEstimatedTeamSize ?? rolesWithResources.length;
-      const totalResources = response?.totalMatchingResources ?? 0;
-
-      // Create summary message
-      let summaryContent = t('aiChatbot.summaryMessage', { 
-        teamSize, 
-        roleText: teamSize === 1 ? t('aiChatbot.role') : t('aiChatbot.roles'),
-        totalResources,
-        resourceText: totalResources === 1 ? t('aiChatbot.resource') : t('aiChatbot.resources')
-      });
-      summaryContent += `\n\n${t('aiChatbot.showingTalent')}`;
+      if (response.keyConsiderations && response.keyConsiderations.length > 0) {
+        summaryContent += `\n\n**Key Considerations:**\n${response.keyConsiderations.map(c => `• ${c}`).join('\n')}`;
+      }
 
       const assistantMessage: Message = {
         role: MessageRole.ASSISTANT,
         content: summaryContent,
         timestamp: new Date(),
-        rolesWithResources: rolesWithResources
+        unifiedData: response
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      const currentInput = userMessage.content;
-
-      // Step 1: classify intent + extract roles via Gemini
-      console.log('[chatbot] Calling classifyIntent with:', currentInput);
-      const classification = await aiService.classifyIntent(baseUrl, currentInput);
-      console.log('[chatbot] Classification result:', classification);
-
-      // Step 2: route based on intent
-      if (classification.intent === CLASSIFICATION_INTENT.PRICING && classification.roles.length > 0) {
-         console.log('[chatbot] → pricing flow, roles:', classification.roles);
-        const response = await aiService.optimizePricing(baseUrl, {
-          roles: classification.roles,
-          location: userLocation,
-          budget: budget ? parseFloat(budget.replace(/[^0-9.]/g, '')) || undefined : undefined,
-        });
-
-        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: MessageRole.ASSISTANT,
-            content: '',
-            timestamp: new Date(),
-            pricingData: response.results,
-          },
-        ]);
-      } else if (classification.intent === CLASSIFICATION_INTENT.ROLE_IDENTIFICATION) {
-        // Existing flow — unchanged
-        const extractedReqs = extractRequirements();
-        const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
-        const finalRequirements = allRequirements.length > 0 ? allRequirements : ['general'];
-
-        const requestData: IdentifyRolesRequest = {
-          projectDescription: currentInput,
-          requirements: finalRequirements,
-          budget: budget || undefined,
-          timeline: timeline || undefined,
-        };
-
-        const response: any = await aiService.identifyRoles(baseUrl, requestData);
-        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
-
-        const roles = response?.roles || [];
-        const teamSize = response?.totalEstimatedTeamSize ?? roles.length;
-        const phasing = response?.recommendedPhasing;
-        const considerations = response?.keyConsiderations || [];
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: MessageRole.ASSISTANT,
-            content: formatRolesResponse(roles, teamSize, phasing, considerations),
-            timestamp: new Date(),
-          },
-        ]);
-      } else {
-        // Pricing intent without roles, or unknown
-        setMessages((prev) => prev.filter((msg) => !msg.isLoading));
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: MessageRole.ASSISTANT,
-            content:
-              classification.intent === CLASSIFICATION_INTENT.PRICING
-                ? t('chatbot.pricingNoRole')
-                : t('chatbot.fallbackHelp'),
-            timestamp: new Date(),
-          },
-        ]);
-      }
     } catch (error: any) {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
       
@@ -424,6 +368,107 @@ export const AIChatbot: React.FC = () => {
     setRequirements([]);
     setBudget('');
     setTimeline('');
+  };
+
+  const renderUnifiedData = (data: UnifiedRolesWithPricingResponse) => {
+    return (
+      <div className={styles.unifiedResults}>
+        {data.roles.map((role, roleIdx) => (
+          <div key={roleIdx} className={styles.roleSection}>
+            <div className={styles.roleHeader}>
+              <h4 className={styles.roleTitle}>
+                {role?.title || 'Unknown Role'} ({role?.seniorityLevel || 'N/A'})
+              </h4>
+              <span className={styles.rolePriority}>
+                {role?.priority || 'N/A'}
+              </span>
+            </div>
+            <p className={styles.roleReasoning}>{role?.reasoning || ''}</p>
+            <div className={styles.roleSkills}>
+              <strong>Required Skills:</strong> {role?.skills?.join(', ') || 'N/A'}
+            </div>
+            
+            {role?.pricingSummary && (
+              <div className={styles.pricingSummaryBox}>
+                {role.pricingSummary}
+              </div>
+            )}
+
+            {role?.pricingLevels && role.pricingLevels.length > 0 ? (
+              <div className={styles.pricingLevelsSection}>
+                {role.pricingLevels.map((level, levelIdx) => (
+                  <div key={levelIdx} className={`${styles.levelCard} ${level.isCheaper ? styles.cheaperCard : styles.regularCard}`}>
+                    <div className={styles.levelHeader}>
+                      <span className={styles.levelTitle}>{level.level}</span>
+                      <span className={styles.resourceCount}>
+                        {level.resourceCount} {level.resourceCount === 1 ? 'resource' : 'resources'}
+                      </span>
+                    </div>
+
+                    <div className={styles.rateRow}>
+                      {level.marketRate && (
+                        <div className={styles.rateBlock}>
+                          <span className={styles.rateLabel}>Market ({level.detectedRegion})</span>
+                          <span className={styles.rateValue}>${level.marketRate.avg.toFixed(2)}/hr</span>
+                          <span className={styles.rateRange}>
+                            ${level.marketRate.min}–${level.marketRate.max}
+                          </span>
+                        </div>
+                      )}
+                      <div className={styles.rateBlock}>
+                        <span className={styles.rateLabel}>Our Rate</span>
+                        <span className={styles.rateValue}>${level.ourRates.avg.toFixed(2)}/hr</span>
+                        <span className={styles.rateRange}>
+                          ${level.ourRates.min}–${level.ourRates.max}
+                        </span>
+                      </div>
+                    </div>
+
+                    {level.isCheaper && level.savings > 0 && (
+                      <div className={styles.savingsBanner}>
+                        {level.savingsPercent}% cheaper — saving ~${(level.savings || 0).toFixed(2)}/hr
+                      </div>
+                    )}
+
+                    {level.resources && level.resources.length > 0 ? (
+                      <div className={styles.resourceList}>
+                        {level.resources.slice(0, 3).map((resource) => (
+                          <ResourceCard
+                            key={resource.id}
+                            resource={{
+                              id: resource.id,
+                              fullName: resource.fullName,
+                              title: resource.title,
+                              skills: resource.skills,
+                              yearsOfExperience: resource.yearsOfExperience,
+                              availableStatus: resource.availableStatus,
+                              matchScore: resource.matchScore,
+                              profilePicture: resource.profilePicture
+                            }}
+                            onScheduleInterview={handleScheduleInterview}
+                            onViewTimesheet={handleViewTimesheet}
+                            onSendInquiry={handleSendInquiry}
+                            onViewDetails={handleViewDetails}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.noResourcesLabel}>
+                        No matched resources available
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.noResourcesLabel}>
+                No matched resources available
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   // const renderPricingResult = (data: PricingResult[]) => (
@@ -470,14 +515,14 @@ export const AIChatbot: React.FC = () => {
                     <div className={styles.rateRow}>
                       <div className={styles.rateBlock}>
                         <span className={styles.rateLabel}>Market ({lr.detectedRegion})</span>
-                        <span className={styles.rateValue}>${lr.marketRate.avg}/hr</span>
+                        <span className={styles.rateValue}>${lr.marketRate.avg.toFixed(2)}/hr</span>
                         <span className={styles.rateRange}>
                           ${lr.marketRate.min}–${lr.marketRate.max}
                         </span>
                       </div>
                       <div className={styles.rateBlock}>
                         <span className={styles.rateLabel}>Our Rate</span>
-                        <span className={styles.rateValue}>${lr.ourRates.avg}/hr</span>
+                        <span className={styles.rateValue}>${lr.ourRates.avg.toFixed(2)}/hr</span>
                         <span className={styles.rateRange}>
                           ${lr.ourRates.min}–${lr.ourRates.max}
                         </span>
@@ -486,7 +531,7 @@ export const AIChatbot: React.FC = () => {
 
                     {lr.isCheaper ? (
                       <div className={styles.savingsBanner}>
-                        {lr.savingsPercent}% cheaper — saving ~${lr.savings}/hr
+                        {lr.savingsPercent}% cheaper — saving ~${(lr.savings || 0).toFixed(2)}/hr
                       </div>
                     ) : (
                       <div className={styles.neutralBanner}>
@@ -537,7 +582,9 @@ export const AIChatbot: React.FC = () => {
         <div className={styles.chatWindow}>
           <div className={styles.header}>
             <div className={styles.headerLeft}>
-              <div className={styles.aiIcon}>🤖</div>
+              <Tooltip title="AI Role Advisor - Your intelligent assistant" placement="bottom">
+                <div className={styles.aiIcon}>🤖</div>
+              </Tooltip>
               <div>
                 <h3>AI Role Advisor</h3>
                 <p>Get intelligent role recommendations</p>
@@ -557,28 +604,35 @@ export const AIChatbot: React.FC = () => {
           <div className={styles.messagesContainer}>
             {messages.length === 0 ? (
               <div className={styles.welcomeScreen}>
-                {/* <div className={styles.welcomeIcon}>AI</div> */}
                 <h2>Welcome to AI Role Advisor!</h2>
-                <p>Describe your project and I'll recommend the perfect team composition.</p>
-                <div className={styles.exampleQueries}>
+                <p>Describe your project and I'll recommend the perfect team composition with pricing insights.</p>
+                <div className={styles.messageSuggestions}>
                   <p><strong>Try asking:</strong></p>
-                  <div 
-                    className={styles.exampleQuery}
-                    onClick={() => setInput('I need to build a mobile fitness app with workout tracking and social features')}
-                  >
-                    "I need to build a mobile fitness app with workout tracking"
-                  </div>
-                  <div 
-                    className={styles.exampleQuery}
-                    onClick={() => setInput('Building a blockchain-based supply chain tracking system with Ethereum')}
-                  >
-                    "Building a blockchain supply chain tracking system"
-                  </div>
-                  <div 
-                    className={styles.exampleQuery}
-                    onClick={() => setInput('E-commerce platform with React frontend and Node.js backend')}
-                  >
-                    "E-commerce platform with React and Node.js"
+                  <div className={styles.suggestionChips}>
+                    <div 
+                      className={styles.suggestionChip}
+                      onClick={() => setInput('Build a mobile app like Instagram')}
+                    >
+                      Build a mobile app like Instagram
+                    </div>
+                    <div 
+                      className={styles.suggestionChip}
+                      onClick={() => setInput('E-commerce platform with AI recommendations')}
+                    >
+                      E-commerce platform with AI recommendations
+                    </div>
+                    <div 
+                      className={styles.suggestionChip}
+                      onClick={() => setInput('Real-time collaboration tool for teams')}
+                    >
+                      Real-time collaboration tool for teams
+                    </div>
+                    <div 
+                      className={styles.suggestionChip}
+                      onClick={() => setInput('Healthcare patient management system')}
+                    >
+                      Healthcare patient management system
+                    </div>
                   </div>
                 </div>
               </div>
@@ -595,6 +649,8 @@ export const AIChatbot: React.FC = () => {
                         <span></span>
                         <span></span>
                       </div>
+                    ) : msg.unifiedData ? (
+                      renderUnifiedData(msg.unifiedData)
                     ) : msg.pricingData && msg.pricingData.length > 0 ? (
                       renderPricingResult(msg.pricingData)
                     ) : (
@@ -664,6 +720,24 @@ export const AIChatbot: React.FC = () => {
               ))
             )}
             <div ref={messagesEndRef} />
+            
+            {/* Add suggestions at the end of messages */}
+            {messages.length > 0 && (
+              <div className={styles.messageSuggestions}>
+                <p><strong>Try asking:</strong></p>
+                <div className={styles.suggestionChips}>
+                  {messageSuggestions.map((suggestion, idx) => (
+                    <div 
+                      key={idx}
+                      className={styles.suggestionChip}
+                      onClick={() => setInput(suggestion)}
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.inputArea}>
