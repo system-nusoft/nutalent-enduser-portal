@@ -117,3 +117,157 @@
   font-weight: 600;
   color: $date-text-color;
 }
+
+@import '/src/styles/colors.scss';
+
+
+
+.img_gif {
+    background: url('../../assets/image/interview-scheduled.gif') lightgray 50% / cover no-repeat;
+    mix-blend-mode: multiply;
+    height: 8.938rem;
+    width: 8.938rem;
+}
+
+.greeting_text {
+    color: $text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.48px;
+}
+
+
+.greeting_desc {
+    color: $card-label;
+    text-align: center;
+
+    /* Body/Large 14 */
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+    /* 128.571% */
+    letter-spacing: -0.06px;
+}
+
+.Interview_text {
+    color: $text;
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.03rem;
+}
+
+
+.icon_text {
+    color: $dard-light;
+    font-family: Inter;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+}
+
+.desc {
+    color: $text;
+    font-family: Inter;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    letter-spacing: -0.004rem;
+}
+
+.dropdown_text {
+    color: $light-time-zone-text;
+    text-align: center;
+    font-family: Inter;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+    /* 21px */
+}
+
+.heading2 {
+    color: $light-time-zone-text;
+    font-family: Inter;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+    /* 24px */
+}
+
+.img {
+    width: 5.406rem;
+    height: 5.406rem;
+}
+
+.recommended_slot {
+  position: relative;
+  border-width: 0.125rem !important;
+  border-style: solid !important;
+  border-color: $date-text-color !important;
+  background-color: rgba($date-text-color, 0.08) !important;
+  color: $link-text !important;
+  font-weight: 700 !important;
+  animation: pulse_recommended 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse_recommended {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba($date-text-color, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 0.5rem rgba($date-text-color, 0);
+  }
+}
+
+.recommended_heading {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $date-text-color;
+}
+
+.smart_schedule_btn {
+  color: $link-text !important;
+  font-weight: 600;
+
+  &:hover,
+  &:focus {
+    color: $button-text-blue !important;
+    font-weight: 700 !important;
+  }
+
+  &:disabled {
+    color: $link-text !important;
+    opacity: 0.5;
+  }
+}
+
+.smart_tooltip {
+  :global(.ant-tooltip-inner) {
+    background: linear-gradient(135deg, $ai-gradient-start 0%, $ai-gradient-end 100%) !important;
+    color: $white !important;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.ant-tooltip-arrow) {
+    --antd-arrow-background-color: $ai-gradient-start !important;
+  }
+
+  :global(.ant-tooltip-arrow::before) {
+    background: $ai-gradient-start !important;
+  }
+}
