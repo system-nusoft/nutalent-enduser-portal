@@ -326,7 +326,7 @@ export const AIChatbot: React.FC = () => {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
 
       // Create summary message with savings info
-      let summaryContent = `${response.overallSavingsSummary}\n\nFound ${response.totalEstimatedTeamSize} recommended roles with ${response.totalMatchingResources} matching resources.`;
+      let summaryContent = `${response.overallSavingsSummary || 'Analysis complete'}\n\nFound ${response.totalEstimatedTeamSize || 0} recommended roles with ${response.totalMatchingResources || 0} matching resources.`;
       
       if (response.keyConsiderations && response.keyConsiderations.length > 0) {
         summaryContent += `\n\n**Key Considerations:**\n${response.keyConsiderations.map(c => `• ${c}`).join('\n')}`;
@@ -399,26 +399,27 @@ export const AIChatbot: React.FC = () => {
                 {role.pricingLevels.map((level, levelIdx) => (
                   <div key={levelIdx} className={`${styles.levelCard} ${level.isCheaper ? styles.cheaperCard : styles.regularCard}`}>
                     <div className={styles.levelHeader}>
-                      <span className={styles.levelTitle}>{level.level}</span>
+                      <span className={styles.levelTitle}>{level.level || 'Standard'}</span>
                       <span className={styles.resourceCount}>
-                        {level.resourceCount} {level.resourceCount === 1 ? 'resource' : 'resources'}
+                        {level.resourceCount || 0} {(level.resourceCount || 0) === 1 ? 'resource' : 'resources'}
                       </span>
                     </div>
 
                     <div className={styles.rateRow}>
                       {level.marketRate && (
                         <div className={styles.rateBlock}>
-                          <span className={styles.rateLabel}>Market ({level.detectedRegion})</span>
-                          <span className={styles.rateValue}>${level.marketRate.avg.toFixed(2)}/hr</span>
+                          <span className={styles.rateLabel}>Market ({level.detectedRegion || 'Global'})</span>
+                          <span className={styles.rateValue}>${(level.marketRate.avg || 0).toFixed(2)}/hr</span>
                           <span className={styles.rateRange}>
-                            ${level.marketRate.min}–${level.marketRate.max}
+                            ${(level.marketRate.min || 0)}–${(level.marketRate.max || 0)}
                           </span>
                         </div>
                       )}
                       <div className={styles.rateBlock}>
                         <span className={styles.rateLabel}>Our Rate</span>
-                        <span className={styles.rateValue}>${level.ourRates.avg.toFixed(2)}/hr</span>
+                        <span className={styles.rateValue}>${(level.ourRates.avg || 0).toFixed(2)}/hr</span>
                         <span className={styles.rateRange}>
+                          ${(level.ourRates.min || 0)}–${(level.ourRates.max || 0)}
                           ${level.ourRates.min}–${level.ourRates.max}
                         </span>
                       </div>
@@ -542,7 +543,7 @@ export const AIChatbot: React.FC = () => {
                 ) : (
                   <div className={styles.rateBlock}>
                     <span className={styles.rateLabel}>Our Rate</span>
-                    <span className={styles.rateValue}>${lr.ourRates.avg}/hr</span>
+                    <span className={styles.rateValue}>${lr.ourRates.avg.toFixed(2)}/hr</span>
                     <span className={styles.rateRange}>
                       ${lr.ourRates.min}–${lr.ourRates.max}
                     </span>

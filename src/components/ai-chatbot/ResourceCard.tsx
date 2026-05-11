@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, Tooltip } from 'antd';
 import { CalendarOutlined, EyeOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { MatchingResource } from 'src/services/ai';
+import { RESOURCE_STATUS } from 'src/utils/enum';
 import styles from './ResourceCard.module.scss';
 
 interface ResourceCardProps {
@@ -26,12 +27,13 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   };
 
   const getAvailabilityColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'available':
+    switch (status) {
+      case RESOURCE_STATUS.AVAILABLE:
         return '#10b981';
       case 'partially available':
         return '#f59e0b';
-      case 'unavailable':
+      case RESOURCE_STATUS.BUSY:
+      case RESOURCE_STATUS.VACATION:
         return '#ef4444';
       default:
         return '#6b7280';
