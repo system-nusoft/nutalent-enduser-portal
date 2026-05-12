@@ -1,4 +1,5 @@
 import { combineReducers } from "redux";
+import aiFeatureReducer from "./ai";
 import { allEngagementsFeatureReducer } from "./all-engagements-reducer";
 import { appFeatureReducer } from "./app";
 import { authFeatureReducer } from "./auth";
@@ -53,6 +54,7 @@ const featuresReducer = combineReducers({
   verifyToken: verifyTokenFeatureReducer,
   configuration: configurationFeatureReducer,
   allEngagements: allEngagementsFeatureReducer,
+  ai: aiFeatureReducer,
 });
 
 export { featuresReducer };

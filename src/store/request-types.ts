@@ -105,3 +105,7 @@ export enum ALL_ENGAGEMENTS_REQUESTS {
   GET_ENGAGEMENTS_REQUEST = "allEngagements/toggleGetEngagements",
   PATCH_ENGAGEMENTS_REQUEST = "allEngagements/togglePatchEngagements",
 }
+
+export enum AI_REQUESTS {
+  IDENTIFY_ROLES_WITH_PRICING_REQUEST = "ai/toggleIdentifyRolesWithPricing",
+}

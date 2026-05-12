@@ -474,7 +474,25 @@
     "resources": "resources",
     "showingTalent": "Showing real-time talent matched to your needs with availability and match scores.",
     "errorMessage": "Sorry, I encountered an error: {{error}}. Please try again.",
-    "defaultError": "Unable to process your request"
+    "defaultError": "Unable to process your request",
+    "title": "AI Role Advisor",
+    "subtitle": "Get intelligent role recommendations",
+    "tooltipTitle": "AI Role Advisor - Your intelligent assistant",
+    "welcomeTitle": "Welcome to AI Role Advisor!",
+    "welcomeDescription": "Describe your project and I'll recommend the perfect team composition with pricing insights.",
+    "tryAsking": "Try asking:",
+    "suggestion1": "Build a mobile app like Instagram",
+    "suggestion2": "E-commerce platform with AI recommendations",
+    "suggestion3": "Real-time collaboration tool for teams",
+    "suggestion4": "Healthcare patient management system",
+    "noMatchedResources": "No matched resources available"
+  },
+  "resourceCard": {
+    "scheduleInterview": "Schedule Interview",
+    "viewDetails": "View Details",
+    "sendInquiry": "Send Inquiry",
+    "viewTimesheet": "View Timesheet",
+    "noSkills": "No skills listed"
   },
   "chatbot": {
     "pricingNoRole": "I can see you're asking about pricing, but I couldn't pin down a specific role. Could you tell me which role you're hiring for?",

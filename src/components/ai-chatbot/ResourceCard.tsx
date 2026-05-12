@@ -1,6 +1,9 @@
 import React from 'react';
-import { Avatar } from 'antd';
+import { Avatar, Tooltip } from 'antd';
+import { CalendarOutlined, EyeOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { MatchingResource } from 'src/services/ai';
+import { RESOURCE_STATUS } from 'src/utils/enum';
 import styles from './ResourceCard.module.scss';
 
 interface ResourceCardProps {
@@ -18,6 +21,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   onSendInquiry,
   onViewDetails,
 }) => {
+  const { t } = useTranslation();
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return '#10b981'; // Green
     if (score >= 60) return '#f59e0b'; // Orange
@@ -25,12 +29,13 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   };
 
   const getAvailabilityColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'available':
+    switch (status) {
+      case RESOURCE_STATUS.AVAILABLE:
         return '#10b981';
       case 'partially available':
         return '#f59e0b';
-      case 'unavailable':
+      case RESOURCE_STATUS.BUSY:
+      case RESOURCE_STATUS.VACATION:
         return '#ef4444';
       default:
         return '#6b7280';
@@ -78,54 +83,72 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
         <div className={styles.skills}>
           <span className={styles.label}>Skills:</span>
           <div className={styles.skillsList}>
-            {/* TODO: Backend should limit skills to top 5 most relevant */}
             {resource?.skills && resource.skills.length > 0 ? (
-              <>
-                {resource.skills.slice(0, 5).map((skill, idx) => (
-                  <span key={idx} className={styles.skillTag}>
-                    {skill}
-                  </span>
-                ))}
-                {resource.skills.length > 5 && (
-                  <span className={styles.skillTag}>+{resource.skills.length - 5} more</span>
-                )}
-              </>
+              resource.skills.map((skill, idx) => (
+                <span key={idx} className={styles.skillTag}>
+                  {skill}
+                </span>
+              ))
             ) : (
-              <span>No skills listed</span>
+              <span>{t('resourceCard.noSkills')}</span>
             )}
           </div>
         </div>
       </div>
 
       <div className={styles.actions}>
-        <button
-          onClick={() => resource?.id && onScheduleInterview(resource.id)}
-          className={`${styles.actionBtn} ${styles.primary}`}
-          disabled={!resource?.id}
-        >
-          Schedule Interview
-        </button>
-        <button
-          onClick={() => resource?.id && onViewDetails(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          View Details
-        </button>
-        <button
-          onClick={() => resource?.id && onSendInquiry(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          Send Inquiry
-        </button>
-        <button
-          onClick={() => resource?.id && onViewTimesheet(resource.id)}
-          className={`${styles.actionBtn} ${styles.secondary}`}
-          disabled={!resource?.id}
-        >
-          View Timesheet
-        </button>
+        <Tooltip title={t('resourceCard.scheduleInterview')} placement="top">
+          <button
+            onClick={() => {
+              console.log('Schedule Interview clicked for resource:', resource?.id);
+              resource?.id && onScheduleInterview(resource.id);
+            }}
+            className={`${styles.iconBtn} ${styles.primary}`}
+            disabled={!resource?.id}
+            aria-label="Schedule Interview"
+          >
+            <CalendarOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title={t('resourceCard.viewDetails')} placement="top">
+          <button
+            onClick={() => {
+              console.log('View Details clicked for resource:', resource?.id);
+              resource?.id && onViewDetails(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="View Details"
+          >
+            <EyeOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title={t('resourceCard.sendInquiry')} placement="top">
+          <button
+            onClick={() => {
+              console.log('Send Inquiry clicked for resource:', resource?.id);
+              resource?.id && onSendInquiry(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="Send Inquiry"
+          >
+            <SendOutlined />
+          </button>
+        </Tooltip>
+        <Tooltip title={t('resourceCard.viewTimesheet')} placement="top">
+          <button
+            onClick={() => {
+              console.log('View Timesheet clicked for resource:', resource?.id);
+              resource?.id && onViewTimesheet(resource.id);
+            }}
+            className={styles.iconBtn}
+            disabled={!resource?.id}
+            aria-label="View Timesheet"
+          >
+            <ClockCircleOutlined />
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

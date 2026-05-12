@@ -31,6 +31,7 @@ const ENDPOINTS = {
   UPDATE_SCHEDULE_INTERVIEW: (id: string) => `resource/${id}/interview-details`,
   GENERATE_TASK_SUMMARY: `ai/generate-task-summary`,
   GENERATE_AND_SAVE_TASK_SUMMARY: `ai/generate-and-save-task-summary`,
+  IDENTIFY_ROLES_WITH_PRICING: `ai/identify-roles-with-pricing`,
   SMART_SCHEDULER_SUGGEST_SLOTS: "smart-scheduler/suggest-slots",
   USER: "user",
   UPLOAD_IMAGE: "upload-image",

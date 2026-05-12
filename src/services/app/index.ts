@@ -728,4 +728,31 @@ export class AppService extends HttpService {
       throw prepareErrorResponse(error);
     }
   };
+
+  identifyRolesWithPricing = async (
+    baseAuthUrl: string,
+    data: any
+  ): Promise<any> => {
+    try {
+      // This endpoint combines role identification, resource matching, and pricing
+      // Timeout set to 180s (3 minutes) due to AI processing + database queries + pricing calculations
+      const apiResponse = await this.post(
+        `${baseAuthUrl}ai/identify-roles-with-pricing`,
+        data,
+        undefined,
+        180000
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      
+      const responseData = response?.data || response;
+      
+      if (!responseData?.roles || !Array.isArray(responseData.roles)) {
+        throw new Error('Invalid response: roles array is required');
+      }
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  };
 }

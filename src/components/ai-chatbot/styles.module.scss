@@ -2,7 +2,7 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 9998;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -12,7 +12,7 @@
   right: 0;
   width: 420px;
   max-width: calc(100vw - 40px);
-  height: 520px;
+  height: 750px;
   max-height: calc(100vh - 140px);
   background: white;
   border-radius: 20px;
@@ -36,7 +36,7 @@
 }
 
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
   padding: 14px 18px;
   display: flex;
@@ -174,17 +174,17 @@
 .welcomeIcon {
   font-size: 32px;
   font-weight: 700;
-  color: #667eea;
+  color: #0d00ff;
   margin-bottom: 12px;
   animation: float 3s ease-in-out infinite;
-  filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.2));
+  filter: drop-shadow(0 4px 8px rgba(79, 70, 229, 0.2));
   display: flex;
   align-items: center;
   justify-content: center;
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
 }
 
@@ -232,7 +232,7 @@
 
   &:hover {
     background: #e9ecef;
-    border-color: #667eea;
+    border-color: #0d00ff;
     transform: translateY(-1px);
   }
 }
@@ -327,7 +327,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--accent, #6366f1);
+  background: var(--accent, #4F46E5);
   color: white;
   display: flex;
   align-items: center;
@@ -367,7 +367,7 @@
   align-items: flex-end;
 
   .messageContent {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
     color: white;
     border-radius: 16px 16px 4px 16px;
   }
@@ -399,7 +399,7 @@
 
   strong {
     font-weight: 600;
-    color: #667eea;
+    color: #4F46E5;
     display: block;
     margin-top: 12px;
     margin-bottom: 8px;
@@ -428,8 +428,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &:hover {
-    border-color: #667eea;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    border-color: #0d00ff;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
   }
 }
 
@@ -452,7 +452,7 @@
 
 .rolePriority {
   padding: 3px 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
   border-radius: 10px;
   font-size: 10px;
@@ -532,10 +532,10 @@
   span {
     width: 10px;
     height: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
     border-radius: 50%;
     animation: pulse 1.6s ease-in-out infinite;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 
     &:nth-child(1) {
       animation-delay: 0s;
@@ -570,6 +570,110 @@
   border-radius: 0 0 20px 20px;
 }
 
+.suggestionsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #F8FAFF;
+  border-radius: 8px;
+  border: 1px solid #E0E7FF;
+}
+
+.suggestionChip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #E0E7FF;
+  background: white;
+  color: #4F46E5;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.messageSuggestions {
+  padding: 16px;
+  margin: 12px 0;
+  background: #F8FAFF;
+  border-radius: 12px;
+  border: 1px solid #E0E7FF;
+
+  p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #4b5563;
+    font-weight: 500;
+  }
+}
+
+.suggestionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .suggestionChip {
+    margin: 0;
+  }
+}
+
+.noResourcesLabel {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Tooltip styles - ensure they appear on top */
+:global(.ant-tooltip) {
+  z-index: 10000 !important;
+  position: fixed !important;
+}
+
+:global(.ant-tooltip-inner) {
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%) !important;
+  color: white !important;
+  border: none !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+  max-width: 200px !important;
+}
+
+:global(.ant-tooltip-arrow) {
+  &::before {
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%) !important;
+  }
+}
+
+:global(.ant-tooltip-placement-top .ant-tooltip-arrow),
+:global(.ant-tooltip-placement-bottom .ant-tooltip-arrow),
+:global(.ant-tooltip-placement-left .ant-tooltip-arrow),
+:global(.ant-tooltip-placement-right .ant-tooltip-arrow) {
+  &::before {
+    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%) !important;
+  }
+}
 
 .optionalFields {
   display: flex;
@@ -587,8 +691,8 @@
 
   &:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
   &::placeholder {
@@ -616,8 +720,8 @@
 
   &:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
   &::placeholder {
@@ -631,7 +735,7 @@
 }
 
 .sendButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -647,7 +751,7 @@
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
   }
 
   &:active:not(:disabled) {
@@ -664,12 +768,12 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
   border: none;
   font-size: 28px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
   transition: all 0.3s;
   display: flex;
   align-items: center;
@@ -679,7 +783,7 @@
 
   &:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
   }
 
   &:active {
@@ -694,14 +798,14 @@
 .toggleText {
   position: absolute;
   right: 70px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
   color: white;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
   animation: slideInRight 0.3s ease-out;
 }
 
@@ -714,6 +818,165 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* Unified Results Styles */
+.unifiedResults {
+  margin-top: 12px;
+}
+
+.roleCard {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    border-color: #4F46E5;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+  }
+}
+
+.roleCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.roleCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.levelBadge {
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.priorityBadge {
+  padding: 3px 8px;
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+  color: white;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pricingSummaryBox {
+  background: #F8FAFF;
+  border: 1px solid #E0E7FF;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.pricingLevelsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.levelCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cheaperCard {
+  border-color: #4F46E5;
+  background: linear-gradient(135deg, #F8FAFF 0%, #ffffff 100%);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+}
+
+.regularCard {
+  border-color: #e5e7eb;
+}
+
+.levelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.levelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.resourceCount {
+  font-size: 12px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.rateRow {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.rateBlock {
+  flex: 1;
+  text-align: center;
+}
+
+.rateLabel {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.rateValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.rateRange {
+  font-size: 10px;
+  color: #9ca3af;
+  display: block;
+}
+
+.savingsBanner {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {
