@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar, Tooltip } from 'antd';
 import { CalendarOutlined, EyeOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { MatchingResource } from 'src/services/ai';
 import { RESOURCE_STATUS } from 'src/utils/enum';
 import styles from './ResourceCard.module.scss';
@@ -20,6 +21,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   onSendInquiry,
   onViewDetails,
 }) => {
+  const { t } = useTranslation();
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return '#10b981'; // Green
     if (score >= 60) return '#f59e0b'; // Orange
@@ -82,25 +84,20 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           <span className={styles.label}>Skills:</span>
           <div className={styles.skillsList}>
             {resource?.skills && resource.skills.length > 0 ? (
-              <>
-                {resource.skills.slice(0, 5).map((skill, idx) => (
-                  <span key={idx} className={styles.skillTag}>
-                    {skill}
-                  </span>
-                ))}
-                {resource.skills.length > 5 && (
-                  <span className={styles.skillTag}>+{resource.skills.length - 5} more</span>
-                )}
-              </>
+              resource.skills.map((skill, idx) => (
+                <span key={idx} className={styles.skillTag}>
+                  {skill}
+                </span>
+              ))
             ) : (
-              <span>No skills listed</span>
+              <span>{t('resourceCard.noSkills')}</span>
             )}
           </div>
         </div>
       </div>
 
       <div className={styles.actions}>
-        <Tooltip title="Schedule Interview" placement="top">
+        <Tooltip title={t('resourceCard.scheduleInterview')} placement="top">
           <button
             onClick={() => {
               console.log('Schedule Interview clicked for resource:', resource?.id);
@@ -113,7 +110,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
             <CalendarOutlined />
           </button>
         </Tooltip>
-        <Tooltip title="View Details" placement="top">
+        <Tooltip title={t('resourceCard.viewDetails')} placement="top">
           <button
             onClick={() => {
               console.log('View Details clicked for resource:', resource?.id);
@@ -126,7 +123,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
             <EyeOutlined />
           </button>
         </Tooltip>
-        <Tooltip title="Send Inquiry" placement="top">
+        <Tooltip title={t('resourceCard.sendInquiry')} placement="top">
           <button
             onClick={() => {
               console.log('Send Inquiry clicked for resource:', resource?.id);
@@ -139,7 +136,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
             <SendOutlined />
           </button>
         </Tooltip>
-        <Tooltip title="View Timesheet" placement="top">
+        <Tooltip title={t('resourceCard.viewTimesheet')} placement="top">
           <button
             onClick={() => {
               console.log('View Timesheet clicked for resource:', resource?.id);

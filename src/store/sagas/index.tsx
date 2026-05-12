@@ -46,6 +46,7 @@ import { watchPatchPassword } from "./update-password-saga";
 import { watchPutProject } from "./update-project-saga";
 import { watchUploadImage } from "./upload-image-saga";
 import { watchVerifyToken } from "./verify-token-saga";
+import { watchIdentifyRolesWithPricing } from "./identify-roles-with-pricing-saga";
 export default function* rootSaga() {
   yield all([
     watchLogin(),
@@ -95,5 +96,6 @@ export default function* rootSaga() {
     watchPostConfiguration(),
     watchFetchGetAllEngagements(),
     watchFetchPatchEngagements(),
+    watchIdentifyRolesWithPricing(),
   ]);
 }

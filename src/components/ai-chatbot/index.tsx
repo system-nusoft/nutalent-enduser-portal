@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { Tooltip } from 'antd';
 import { ResourceCard } from './ResourceCard';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles.module.scss';
-import { AiService } from 'src/services/ai';
 import { EngagementService } from 'src/services/engagement';
 import { Notification } from 'src/components';
 import { ROUTES } from 'src/constants/navigation-routes';
 import { ENGAGEMENTS_STATUS, CLASSIFICATION_INTENT } from 'src/utils/enum';
+import { toggleIdentifyRolesWithPricing } from 'src/store/slices/features/ai';
 import {
   UnifiedRolesWithPricingRequest,
   UnifiedRolesWithPricingResponse,
@@ -38,6 +39,7 @@ interface Message {
 export const AIChatbot: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -49,26 +51,19 @@ export const AIChatbot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userLocation, setUserLocation] = useState<string>('Global');
   const [locationFetched, setLocationFetched] = useState(false);
-  const aiService = new AiService();
   const engagementService = new EngagementService();
 
   const messageSuggestions = [
-    "Build a mobile app like Instagram",
-    "E-commerce platform with AI recommendations",
-    "Real-time collaboration tool for teams",
-    "Healthcare patient management system"
+    t('aiChatbot.suggestion1'),
+    t('aiChatbot.suggestion2'),
+    t('aiChatbot.suggestion3'),
+    t('aiChatbot.suggestion4')
   ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Debug: Check if suggestions should be visible
-  useEffect(() => {
-    console.log('Messages length:', messages.length);
-    console.log('Should show suggestions:', messages.length > 0);
-    console.log('Message suggestions:', messageSuggestions);
-  }, [messages.length]);
 
   // Update loading message based on elapsed time
   useEffect(() => {
@@ -315,31 +310,46 @@ export const AIChatbot: React.FC = () => {
       const extractedReqs = extractRequirements();
       const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
 
-      // Use unified endpoint - single API call for roles + resources + pricing
-      const response = await aiService.identifyRolesWithPricing(baseUrl, {
+      // Use Redux saga for AI API call
+      dispatch(toggleIdentifyRolesWithPricing({
         projectDescription: input,
         location: userLocation,
         budget: budget || undefined,
-        requirements: allRequirements.length > 0 ? allRequirements : undefined
-      });
+        requirements: allRequirements.length > 0 ? allRequirements : undefined,
+        cbSuccess: (response: any) => {
+          setMessages(prev => prev.filter(msg => !msg.isLoading));
 
-      setMessages(prev => prev.filter(msg => !msg.isLoading));
+          // Create summary message with savings info
+          let summaryContent = `${response.overallSavingsSummary || 'Analysis complete'}\n\nFound ${response.totalEstimatedTeamSize || 0} recommended roles with ${response.totalMatchingResources || 0} matching resources.`;
+          
+          if (response.keyConsiderations && response.keyConsiderations.length > 0) {
+            summaryContent += `\n\n**Key Considerations:**\n${response.keyConsiderations.map((c: string) => `• ${c}`).join('\n')}`;
+          }
 
-      // Create summary message with savings info
-      let summaryContent = `${response.overallSavingsSummary || 'Analysis complete'}\n\nFound ${response.totalEstimatedTeamSize || 0} recommended roles with ${response.totalMatchingResources || 0} matching resources.`;
-      
-      if (response.keyConsiderations && response.keyConsiderations.length > 0) {
-        summaryContent += `\n\n**Key Considerations:**\n${response.keyConsiderations.map(c => `• ${c}`).join('\n')}`;
-      }
+          const assistantMessage: Message = {
+            role: MessageRole.ASSISTANT,
+            content: summaryContent,
+            timestamp: new Date(),
+            unifiedData: response
+          };
 
-      const assistantMessage: Message = {
-        role: MessageRole.ASSISTANT,
-        content: summaryContent,
-        timestamp: new Date(),
-        unifiedData: response
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+          setMessages(prev => [...prev, assistantMessage]);
+          setLoading(false);
+          setLoadingStartTime(null);
+        },
+        cbFailure: (error: any) => {
+          setMessages(prev => prev.filter(msg => !msg.isLoading));
+          
+          const errorMessage: Message = {
+            role: MessageRole.ASSISTANT,
+            content: t('aiChatbot.errorMessage', { error: error || t('aiChatbot.defaultError') }),
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          setLoading(false);
+          setLoadingStartTime(null);
+        }
+      }));
     } catch (error: any) {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
       
@@ -349,7 +359,6 @@ export const AIChatbot: React.FC = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setLoading(false);
       setLoadingStartTime(null);
     }
@@ -371,6 +380,17 @@ export const AIChatbot: React.FC = () => {
   };
 
   const renderUnifiedData = (data: UnifiedRolesWithPricingResponse) => {
+    // Safety check for roles array
+    if (!data || !data.roles || !Array.isArray(data.roles)) {
+      return (
+        <div className={styles.unifiedResults}>
+          <div className={styles.noResourcesLabel}>
+            {t('aiChatbot.noMatchedResources')}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={styles.unifiedResults}>
         {data.roles.map((role, roleIdx) => (
@@ -406,45 +426,44 @@ export const AIChatbot: React.FC = () => {
                     </div>
 
                     <div className={styles.rateRow}>
-                      {level.marketRate && (
+                      {level?.marketRate && (
                         <div className={styles.rateBlock}>
-                          <span className={styles.rateLabel}>Market ({level.detectedRegion || 'Global'})</span>
-                          <span className={styles.rateValue}>${(level.marketRate.avg || 0).toFixed(2)}/hr</span>
+                          <span className={styles.rateLabel}>Market ({level?.detectedRegion || 'Global'})</span>
+                          <span className={styles.rateValue}>${(level?.marketRate?.avg || 0).toFixed(2)}/hr</span>
                           <span className={styles.rateRange}>
-                            ${(level.marketRate.min || 0)}–${(level.marketRate.max || 0)}
+                            ${(level?.marketRate?.min || 0)}–${(level?.marketRate?.max || 0)}
                           </span>
                         </div>
                       )}
                       <div className={styles.rateBlock}>
                         <span className={styles.rateLabel}>Our Rate</span>
-                        <span className={styles.rateValue}>${(level.ourRates.avg || 0).toFixed(2)}/hr</span>
+                        <span className={styles.rateValue}>${(level?.ourRates?.avg || 0).toFixed(2)}/hr</span>
                         <span className={styles.rateRange}>
-                          ${(level.ourRates.min || 0)}–${(level.ourRates.max || 0)}
-                          ${level.ourRates.min}–${level.ourRates.max}
+                          ${(level?.ourRates?.min || 0)}–${(level?.ourRates?.max || 0)}
                         </span>
                       </div>
                     </div>
 
-                    {level.isCheaper && level.savings > 0 && (
+                    {level?.isCheaper && (level?.savings || 0) > 0 && (
                       <div className={styles.savingsBanner}>
-                        {level.savingsPercent}% cheaper — saving ~${(level.savings || 0).toFixed(2)}/hr
+                        {level?.savingsPercent || 0}% cheaper — saving ~${(level?.savings || 0).toFixed(2)}/hr
                       </div>
                     )}
 
                     {level.resources && level.resources.length > 0 ? (
                       <div className={styles.resourceList}>
-                        {level.resources.slice(0, 3).map((resource) => (
+                        {level.resources.map((resource) => (
                           <ResourceCard
-                            key={resource.id}
+                            key={resource?.id || Math.random()}
                             resource={{
-                              id: resource.id,
-                              fullName: resource.fullName,
-                              title: resource.title,
-                              skills: resource.skills,
-                              yearsOfExperience: resource.yearsOfExperience,
-                              availableStatus: resource.availableStatus,
-                              matchScore: resource.matchScore,
-                              profilePicture: resource.profilePicture
+                              id: resource?.id || '',
+                              fullName: resource?.fullName || '',
+                              title: resource?.title || '',
+                              skills: resource?.skills || [],
+                              yearsOfExperience: resource?.yearsOfExperience || 0,
+                              availableStatus: resource?.availableStatus || '',
+                              matchScore: resource?.matchScore || 0,
+                              profilePicture: resource?.profilePicture || ''
                             }}
                             onScheduleInterview={handleScheduleInterview}
                             onViewTimesheet={handleViewTimesheet}
@@ -455,7 +474,7 @@ export const AIChatbot: React.FC = () => {
                       </div>
                     ) : (
                       <div className={styles.noResourcesLabel}>
-                        No matched resources available
+                        {t('aiChatbot.noMatchedResources')}
                       </div>
                     )}
                   </div>
@@ -463,7 +482,7 @@ export const AIChatbot: React.FC = () => {
               </div>
             ) : (
               <div className={styles.noResourcesLabel}>
-                No matched resources available
+                {t('aiChatbot.noMatchedResources')}
               </div>
             )}
           </div>
@@ -551,7 +570,7 @@ export const AIChatbot: React.FC = () => {
                 )}
 
                 <div className={styles.resourceList}>
-                  {lr.resources?.slice(0, 3).map((res, resIdx) => (
+                  {lr.resources?.map((res, resIdx) => (
                     <div key={res?.id ?? resIdx} className={styles.resourceCard}>
                       {res?.profilePicture ? (
                         <img src={res.profilePicture} alt={res?.name || '-'} className={styles.avatar} />
@@ -583,12 +602,12 @@ export const AIChatbot: React.FC = () => {
         <div className={styles.chatWindow}>
           <div className={styles.header}>
             <div className={styles.headerLeft}>
-              <Tooltip title="AI Role Advisor - Your intelligent assistant" placement="bottom">
+              <Tooltip title={t('aiChatbot.tooltipTitle')} placement="bottom">
                 <div className={styles.aiIcon}>🤖</div>
               </Tooltip>
               <div>
-                <h3>AI Role Advisor</h3>
-                <p>Get intelligent role recommendations</p>
+                <h3>{t('aiChatbot.title')}</h3>
+                <p>{t('aiChatbot.subtitle')}</p>
               </div>
             </div>
             <div className={styles.headerActions}>
@@ -605,34 +624,34 @@ export const AIChatbot: React.FC = () => {
           <div className={styles.messagesContainer}>
             {messages.length === 0 ? (
               <div className={styles.welcomeScreen}>
-                <h2>Welcome to AI Role Advisor!</h2>
-                <p>Describe your project and I'll recommend the perfect team composition with pricing insights.</p>
+                <h2>{t('aiChatbot.welcomeTitle')}</h2>
+                <p>{t('aiChatbot.welcomeDescription')}</p>
                 <div className={styles.messageSuggestions}>
-                  <p><strong>Try asking:</strong></p>
+                  <p><strong>{t('aiChatbot.tryAsking')}</strong></p>
                   <div className={styles.suggestionChips}>
                     <div 
                       className={styles.suggestionChip}
-                      onClick={() => setInput('Build a mobile app like Instagram')}
+                      onClick={() => setInput(t('aiChatbot.suggestion1'))}
                     >
-                      Build a mobile app like Instagram
+                      {t('aiChatbot.suggestion1')}
                     </div>
                     <div 
                       className={styles.suggestionChip}
-                      onClick={() => setInput('E-commerce platform with AI recommendations')}
+                      onClick={() => setInput(t('aiChatbot.suggestion2'))}
                     >
-                      E-commerce platform with AI recommendations
+                      {t('aiChatbot.suggestion2')}
                     </div>
                     <div 
                       className={styles.suggestionChip}
-                      onClick={() => setInput('Real-time collaboration tool for teams')}
+                      onClick={() => setInput(t('aiChatbot.suggestion3'))}
                     >
-                      Real-time collaboration tool for teams
+                      {t('aiChatbot.suggestion3')}
                     </div>
                     <div 
                       className={styles.suggestionChip}
-                      onClick={() => setInput('Healthcare patient management system')}
+                      onClick={() => setInput(t('aiChatbot.suggestion4'))}
                     >
-                      Healthcare patient management system
+                      {t('aiChatbot.suggestion4')}
                     </div>
                   </div>
                 </div>
@@ -725,7 +744,7 @@ export const AIChatbot: React.FC = () => {
             {/* Add suggestions at the end of messages */}
             {messages.length > 0 && (
               <div className={styles.messageSuggestions}>
-                <p><strong>Try asking:</strong></p>
+                <p><strong>{t('aiChatbot.tryAsking')}</strong></p>
                 <div className={styles.suggestionChips}>
                   {messageSuggestions.map((suggestion, idx) => (
                     <div 
