@@ -40,6 +40,17 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+  <script>
+    // Suppress ResizeObserver loop limit exceeded error
+    window.addEventListener('error', function(e) {
+      if (e.message === 'ResizeObserver loop completed with undelivered notifications.' ||
+          e.message === 'ResizeObserver loop limit exceeded') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return false;
+      }
+    });
+  </script>
 </body>
 
 </html>
