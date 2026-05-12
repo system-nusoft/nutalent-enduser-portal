@@ -374,22 +374,23 @@ export const ViewTimesheet = ({}: props) => {
                 </div>
               </div>
 
-              <div className="white-container w-full col-span-2">
-                <div className="flex  flex-col gap-2">
-                  <div className={styles.card_heading_note}>
-                    {t("timesheet.noteFrom", {
-                      name: timesheetData?.firstName ?? "",
-                    })}
-                  </div>
-                  <div
-                    className={`max-h-[5rem] min-h-[3rem] overflow-auto ${styles.card_desc}`}
-                  >
-                    {Array?.isArray(timesheetData?.TimesheetRevision)
-                      ? timesheetData?.TimesheetRevision[0]?.notes
-                      : ""}
+              {Array?.isArray(timesheetData?.TimesheetRevision) &&
+                (timesheetData?.TimesheetRevision[0]?.notes ?? "").trim().length > 0 && (
+                <div className="white-container w-full col-span-2">
+                  <div className="flex  flex-col gap-2">
+                    <div className={styles.card_heading_note}>
+                      {t("timesheet.noteFrom", {
+                        name: timesheetData?.firstName ?? "",
+                      })}
+                    </div>
+                    <div
+                      className={`max-h-[5rem] min-h-[3rem] overflow-auto ${styles.card_desc}`}
+                    >
+                      {timesheetData?.TimesheetRevision[0]?.notes}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               {comments ? (
                 <div className="white-container w-full col-span-2">
                   <div className="flex  flex-col gap-2">

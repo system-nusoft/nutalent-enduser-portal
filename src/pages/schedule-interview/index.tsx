@@ -707,10 +707,10 @@ export const ScheduledInterview = () => {
                   {/* SMART_SCHEDULER: button + recommended-slots heading */}
                   <div className="w-full flex flex-col items-center gap-2 mb-2">
                     <AntButton
-                      ghost
-                      type="primary"
+                      type="link"
                       onClick={fetchSmartSchedule}
                       disabled={isFetchingRecommendations || !selectedTimeZone}
+                      style={{ border: "none", boxShadow: "none", padding: 0, background: "transparent" }}
                     >
                       <span className="flex items-center" style={{ gap: "10px" }}>
                         {isFetchingRecommendations ? (
@@ -723,11 +723,24 @@ export const ScheduledInterview = () => {
                         ) : (
                           t("button.smartSchedule")
                         )}
-                        <Tooltip title={t("tooltip.smartScheduleInfo")} placement="top">
-                          <InfoCircleOutlined
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ cursor: "help", marginLeft: "8px" }}
-                          />
+                        <Tooltip
+                          title={t("tooltip.smartScheduleInfo")}
+                          placement="top"
+                          overlayClassName={styles.smart_tooltip}
+                        >
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                            }}
+                            style={{ display: "inline-flex", cursor: "help", marginLeft: "8px" }}
+                          >
+                            <InfoCircleOutlined />
+                          </span>
                         </Tooltip>
                       </span>
                     </AntButton>
