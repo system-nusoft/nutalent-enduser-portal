@@ -22,6 +22,7 @@ export const Notification = ({
       className: `${styles[`body_styles_${type}`]} rounded-1`,
       placement: "topRight",
       description: null,
+      style: { zIndex: 10000 },
     });
   } else if (type === "error") {
     return notification.error({
@@ -34,6 +35,7 @@ export const Notification = ({
       duration: 2,
       placement: "topRight",
       description: null,
+      style: { zIndex: 10000 },
     });
   } else if (type === "info") {
     return notification.info({
@@ -46,6 +48,7 @@ export const Notification = ({
       placement: "topRight",
       className: `${styles[`body_styles_${type}`]} rounded-1`,
       description: null,
+      style: { zIndex: 10000 },
     });
   } else if (type === "warning") {
     return notification.warning({
@@ -58,6 +61,7 @@ export const Notification = ({
       className: `${styles[`body_styles_${type}`]} rounded-1`,
       placement: "topRight",
       description: null,
+      style: { zIndex: 10000 },
     });
   }
 
@@ -70,5 +74,6 @@ export const Notification = ({
     duration: 2,
     placement: "topRight",
     description: null,
+    style: { zIndex: 10000 },
   });
 };

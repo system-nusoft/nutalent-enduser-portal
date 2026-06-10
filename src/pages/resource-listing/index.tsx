@@ -396,7 +396,7 @@ export const ResourceListing = ({ title }: props) => {
           total:
             selectedTab === 0
               ? metaResource?.totalCount
-              : metaFavorite?.totalCount,
+              : metaFavorite?.meta?.totalCount,
         }}
         heightAdjuster={20}
         handleRowClick={onClickRow}

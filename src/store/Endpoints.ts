@@ -6,6 +6,7 @@ const ENDPOINTS = {
   SIGNOUT: "user/signout",
   RESOURCES: "end-user/booked-resource",
   FAVORITE_RESOURCES: "end-user/favorite-resource",
+  BULK_FAVORITE_RESOURCES: "end-user/bulk-favorite-resource",
   PROJECT: "project",
   PROJECT_BY_ID: (id: string) => `project/${id}`,
   UPDATE_PASSWORD: `user/update-password`,

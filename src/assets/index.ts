@@ -10,6 +10,7 @@ import { ReactComponent as ArrowSmallRight } from "./svg/arrow-small-right.svg";
 import { ReactComponent as Bell } from "./svg/bell.svg";
 import { ReactComponent as BlueInfoIcon } from "./svg/blue-info.svg";
 import { ReactComponent as Calender } from "./svg/calendar.svg";
+import { ReactComponent as ChatbotSidebarIcon } from "./svg/chatbot-sidebar.svg";
 import { ReactComponent as ClockSideBar } from "./svg/clock-side-bar-icon.svg";
 import { ReactComponent as Clock } from "./svg/clock.svg";
 import { ReactComponent as Comment_info } from "./svg/comment-info.svg";
@@ -77,6 +78,7 @@ export {
   Bell,
   BlueInfoIcon,
   Calender,
+  ChatbotSidebarIcon,
   Clock,
   ClockSideBar,
   Comment_info,

@@ -216,6 +216,44 @@ export interface UnifiedRolesWithPricingResponse {
   overallSavingsSummary: string;
 }
 
+// New Chat Endpoint Interfaces
+export interface ConversationListItem {
+  id: string;
+  title: string;
+  lastMessage: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+  rolesWithResources?: RoleWithResources[];
+  pricingData?: PricingResult[];
+  unifiedData?: UnifiedRolesWithPricingResponse;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+}
+
+export interface ChatRequest {
+  message: string;
+  conversationId?: string;
+  location?: string;
+}
+
+export interface ChatResponse {
+  conversationId: string;
+  intent: 'role_identification' | 'pricing' | 'platform_data' | 'general';
+  text: string;
+  message?: string;
+  data?: UnifiedRolesWithPricingResponse | PricingResult[] | any;
+  rolesData?: UnifiedRolesWithPricingResponse;
+}
+
 export class AiService extends HttpService {
   async identifyRoles(
     baseUrl: string,
@@ -463,6 +501,103 @@ export class AiService extends HttpService {
       if (!responseData?.roles || !Array.isArray(responseData.roles)) {
         throw new Error('Invalid response: roles array is required');
       }
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  // New Chat Endpoints
+  async getConversations(
+    baseUrl: string
+  ): Promise<ConversationListItem[]> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+
+    try {
+      const apiResponse = await this.get(`${baseUrl}ai/conversations`);
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
+      
+      return Array.isArray(responseData) ? responseData : [];
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async getConversation(
+    baseUrl: string,
+    conversationId: string
+  ): Promise<Conversation> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+    
+    if (!conversationId?.trim()) {
+      throw new Error('Conversation ID is required');
+    }
+
+    try {
+      const apiResponse = await this.get(`${baseUrl}ai/conversations/${conversationId}`);
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async sendChatMessage(
+    baseUrl: string,
+    data: ChatRequest
+  ): Promise<ChatResponse> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+    
+    if (!data?.message?.trim()) {
+      throw new Error('Message is required');
+    }
+
+    try {
+      // Chat endpoints can take time for AI processing
+      const apiResponse = await this.post(
+        `${baseUrl}ai/chat`,
+        data,
+        undefined,
+        180000
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
+      
+      return responseData;
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  }
+
+  async deleteConversation(
+    baseUrl: string,
+    conversationId: string
+  ): Promise<{ success: boolean; message: string }> {
+    if (!baseUrl?.trim()) {
+      throw new Error('Base URL is required');
+    }
+    
+    if (!conversationId?.trim()) {
+      throw new Error('Conversation ID is required');
+    }
+
+    try {
+      const apiResponse = await this.post(
+        `${baseUrl}ai/conversations/${conversationId}/delete`,
+        {}
+      );
+      const response = prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+      const responseData = response?.data || response;
       
       return responseData;
     } catch (error) {

@@ -160,6 +160,22 @@ export class AppService extends HttpService {
       throw prepareErrorResponse(error);
     }
   };
+  
+  fetchBulkFavoriteResources = async (
+    baseAuthUrl: string,
+    data: { resourceIds: string[] }
+  ): Promise<any> => {
+    try {
+      const apiResponse = await this.post(
+        `${baseAuthUrl}` + ENDPOINTS.BULK_FAVORITE_RESOURCES,
+        data
+      );
+
+      return prepareResponseObject(apiResponse, RESPONSE_TYPES.SUCCESS);
+    } catch (error) {
+      throw prepareErrorResponse(error);
+    }
+  };
   fetchPostBookResource = async (
     baseAuthUrl: string,
     id: string,
