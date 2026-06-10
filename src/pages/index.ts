@@ -1,3 +1,4 @@
+import { ChatbotPage } from "./chatbot";
 import { CreateProject } from "./create-project";
 import { Dashboard } from "./dashboard";
 import { HelpAndFeedBack } from "./help-and-feedback";
@@ -8,6 +9,7 @@ import { ResourceListing } from "./resource-listing";
 import { ResourceProfile } from "./resource-profile";
 
 export { 
+  ChatbotPage,
   Dashboard,
   HelpAndFeedBack,
   Home,

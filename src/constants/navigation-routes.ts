@@ -33,5 +33,6 @@ export enum ROUTES {
   VIEW_TIMESHEET = "/resources/:id/engagements/:engId/timesheets",
   VIEW_TIMESHEET_ENGAGEMENT = "/engagements/:engId/timesheets",
   VIEW_INVOICE_TIMESHEET = "/engagements/:engId/timesheets/:id",
+  CHATBOT = "/chatbot",
   // more routes will be added here
 }

@@ -3,15 +3,19 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { Tooltip } from 'antd';
 import { ResourceCard } from './ResourceCard';
-import { useNavigate } from 'react-router-dom';
+import { ResourceAccordion } from './ResourceAccordion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './styles.module.scss';
 import { EngagementService } from 'src/services/engagement';
+import { AppService } from 'src/services/app';
 import { Notification } from 'src/components';
 import { ROUTES } from 'src/constants/navigation-routes';
+import RequestAppAction from 'src/store/slices/app-actions';
 import { ENGAGEMENTS_STATUS, CLASSIFICATION_INTENT } from 'src/utils/enum';
-import { toggleIdentifyRolesWithPricing } from 'src/store/slices/features/ai';
+import { AiService } from 'src/services/ai';
 import {
-  UnifiedRolesWithPricingRequest,
+  ChatRequest,
+  ChatResponse,
   UnifiedRolesWithPricingResponse,
   ResourceWithPricing,
   PricingLevel,
@@ -38,20 +42,22 @@ interface Message {
 
 export const AIChatbot: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [requirements, setRequirements] = useState<string[]>([]);
-  const [budget, setBudget] = useState('');
-  const [timeline, setTimeline] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
   const [userLocation, setUserLocation] = useState<string>('Global');
   const [locationFetched, setLocationFetched] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const engagementService = new EngagementService();
+  const aiService = new AiService();
 
   const messageSuggestions = [
     t('aiChatbot.suggestion1'),
@@ -99,7 +105,36 @@ export const AIChatbot: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  
+  useEffect(() => {
+    if (isOpen && !locationFetched) {
+      fetchUserLocation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, locationFetched]);
+
+  // Click outside to close functionality
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        chatWindowRef.current &&
+        !chatWindowRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Don't show chatbot on dedicated chatbot page
+  if (location.pathname === '/chatbot') {
+    return null;
+  }
+
   const extractRequirements = (): string[] => {
     // Keywords should be extracted from backend configuration
     // For now, return empty array and let backend handle requirement extraction
@@ -191,29 +226,29 @@ export const AIChatbot: React.FC = () => {
     navigate(`${ROUTES.RESOURCEBYID.replace(':id', resourceId)}`);
   };
 
-  const formatRolesResponse = (roles: Role[], totalTeamSize: number, phasing?: string, considerations?: string[]): string => {
-    let response = `Based on your requirements, I recommend a team of ${totalTeamSize} ${totalTeamSize === 1 ? 'person' : 'people'}:\n\n`;
-    
-    roles.forEach((role, index) => {
-      response += `${index + 1}. ${role.title} (${role.seniorityLevel})\n`;
-      response += `   • Skills: ${role.skills.join(', ')}\n`;
-      response += `   • Hours: ${role.estimatedHoursPerWeek}/week\n`;
-      response += `   • Priority: ${role.priority}\n`;
-      response += `   • Why: ${role.reasoning}\n\n`;
-    });
+  const handleBookmarkAll = async (resourceIds: string[]) => {
+    try {
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      if (!baseUrl) {
+        console.error('Base URL not configured');
+        return;
+      }
 
-    if (phasing) {
-      response += `\nRecommended Phasing:\n${phasing}\n`;
+      const appService = new AppService();
+      await appService.fetchBulkFavoriteResources(baseUrl, { resourceIds });
+      
+      // Refresh favorite resources list if on favorites page
+      if (location.pathname.includes('/resources') && location.hash === '#favorite') {
+        dispatch(RequestAppAction.handleGetFavoriteResrouces({
+          query: { page: 1, search: '' }
+        }));
+      }
+      
+      // Navigate to favourites page on success
+      navigate(ROUTES.FAVORITE_RESOURCES);
+    } catch (error) {
+      console.error('Error favouriting resources:', error);
     }
-
-    if (considerations && Array.isArray(considerations) && considerations.length > 0) {
-      response += `\nKey Considerations:\n`;
-      considerations.forEach(consideration => {
-        response += `• ${consideration}\n`;
-      });
-    }
-
-    return response;
   };
 
   // Reverse-geocode lat/lng → country name using a free public API
@@ -269,13 +304,6 @@ export const AIChatbot: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (isOpen && !locationFetched) {
-      fetchUserLocation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, locationFetched]);
-
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -288,6 +316,7 @@ export const AIChatbot: React.FC = () => {
       timestamp: new Date()
     };
 
+    const currentInput = input;
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
@@ -306,50 +335,52 @@ export const AIChatbot: React.FC = () => {
       if (!baseUrl) {
         throw new Error(t('error.configurationError'));
       }
+
+      // Use new chat endpoint
+      const chatRequest: ChatRequest = {
+        message: currentInput,
+        conversationId: conversationId,
+        location: userLocation
+      };
+
+      const response: ChatResponse = await aiService.sendChatMessage(baseUrl, chatRequest);
       
-      const extractedReqs = extractRequirements();
-      const allRequirements = Array.from(new Set([...requirements, ...extractedReqs]));
+      // Store conversation ID for subsequent messages
+      if (response.conversationId && !conversationId) {
+        setConversationId(response.conversationId);
+      }
 
-      // Use Redux saga for AI API call
-      dispatch(toggleIdentifyRolesWithPricing({
-        projectDescription: input,
-        location: userLocation,
-        budget: budget || undefined,
-        requirements: allRequirements.length > 0 ? allRequirements : undefined,
-        cbSuccess: (response: any) => {
-          setMessages(prev => prev.filter(msg => !msg.isLoading));
+      setMessages(prev => prev.filter(msg => !msg.isLoading));
 
-          // Create summary message with savings info
-          let summaryContent = `${response.overallSavingsSummary || 'Analysis complete'}\n\nFound ${response.totalEstimatedTeamSize || 0} recommended roles with ${response.totalMatchingResources || 0} matching resources.`;
-          
-          if (response.keyConsiderations && response.keyConsiderations.length > 0) {
-            summaryContent += `\n\n**Key Considerations:**\n${response.keyConsiderations.map((c: string) => `• ${c}`).join('\n')}`;
-          }
+      // Handle response based on intent
+      let assistantMessage: Message;
 
-          const assistantMessage: Message = {
-            role: MessageRole.ASSISTANT,
-            content: summaryContent,
-            timestamp: new Date(),
-            unifiedData: response
-          };
-
-          setMessages(prev => [...prev, assistantMessage]);
-          setLoading(false);
-          setLoadingStartTime(null);
-        },
-        cbFailure: (error: any) => {
-          setMessages(prev => prev.filter(msg => !msg.isLoading));
-          
-          const errorMessage: Message = {
-            role: MessageRole.ASSISTANT,
-            content: t('aiChatbot.errorMessage', { error: error || t('aiChatbot.defaultError') }),
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-          setLoading(false);
-          setLoadingStartTime(null);
+      if (response.intent === 'role_identification' && (response.rolesData || response.data)) {
+        const unifiedData = (response.rolesData || response.data) as UnifiedRolesWithPricingResponse;
+        let summaryContent = `${unifiedData.overallSavingsSummary || 'Analysis complete'}\n\nFound ${unifiedData.totalEstimatedTeamSize || 0} recommended roles with ${unifiedData.totalMatchingResources || 0} matching resources.`;
+        
+        if (unifiedData.keyConsiderations && unifiedData.keyConsiderations.length > 0) {
+          summaryContent += `\n\n**Key Considerations:**\n${unifiedData.keyConsiderations.map((c: string) => `• ${c}`).join('\n')}`;
         }
-      }));
+
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: summaryContent,
+          timestamp: new Date(),
+          unifiedData: unifiedData
+        };
+      } else {
+        // For pricing, platform_data, or general intents
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: response.text || response.message || 'Response received',
+          timestamp: new Date()
+        };
+      }
+
+      setMessages(prev => [...prev, assistantMessage]);
+      setLoading(false);
+      setLoadingStartTime(null);
     } catch (error: any) {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
       
@@ -375,8 +406,6 @@ export const AIChatbot: React.FC = () => {
     setMessages([]);
     setInput('');
     setRequirements([]);
-    setBudget('');
-    setTimeline('');
   };
 
   const renderUnifiedData = (data: UnifiedRolesWithPricingResponse) => {
@@ -407,12 +436,6 @@ export const AIChatbot: React.FC = () => {
             <div className={styles.roleSkills}>
               <strong>Required Skills:</strong> {role?.skills?.join(', ') || 'N/A'}
             </div>
-            
-            {role?.pricingSummary && (
-              <div className={styles.pricingSummaryBox}>
-                {role.pricingSummary}
-              </div>
-            )}
 
             {role?.pricingLevels && role.pricingLevels.length > 0 ? (
               <div className={styles.pricingLevelsSection}>
@@ -451,27 +474,12 @@ export const AIChatbot: React.FC = () => {
                     )}
 
                     {level.resources && level.resources.length > 0 ? (
-                      <div className={styles.resourceList}>
-                        {level.resources.map((resource) => (
-                          <ResourceCard
-                            key={resource?.id || Math.random()}
-                            resource={{
-                              id: resource?.id || '',
-                              fullName: resource?.fullName || '',
-                              title: resource?.title || '',
-                              skills: resource?.skills || [],
-                              yearsOfExperience: resource?.yearsOfExperience || 0,
-                              availableStatus: resource?.availableStatus || '',
-                              matchScore: resource?.matchScore || 0,
-                              profilePicture: resource?.profilePicture || ''
-                            }}
-                            onScheduleInterview={handleScheduleInterview}
-                            onViewTimesheet={handleViewTimesheet}
-                            onSendInquiry={handleSendInquiry}
-                            onViewDetails={handleViewDetails}
-                          />
-                        ))}
-                      </div>
+                      <ResourceAccordion
+                        resources={level.resources}
+                        onViewDetails={handleViewDetails}
+                        onBookmarkAll={handleBookmarkAll}
+                        roleSeniority={role?.seniorityLevel || ''}
+                      />
                     ) : (
                       <div className={styles.noResourcesLabel}>
                         {t('aiChatbot.noMatchedResources')}
@@ -599,7 +607,7 @@ export const AIChatbot: React.FC = () => {
   return (
     <div className={styles.chatbotContainer}>
       {isOpen && (
-        <div className={styles.chatWindow}>
+        <div className={styles.chatWindow} ref={chatWindowRef}>
           <div className={styles.header}>
             <div className={styles.headerLeft}>
               <Tooltip title={t('aiChatbot.tooltipTitle')} placement="bottom">
@@ -740,43 +748,9 @@ export const AIChatbot: React.FC = () => {
               ))
             )}
             <div ref={messagesEndRef} />
-            
-            {/* Add suggestions at the end of messages */}
-            {messages.length > 0 && (
-              <div className={styles.messageSuggestions}>
-                <p><strong>{t('aiChatbot.tryAsking')}</strong></p>
-                <div className={styles.suggestionChips}>
-                  {messageSuggestions.map((suggestion, idx) => (
-                    <div 
-                      key={idx}
-                      className={styles.suggestionChip}
-                      onClick={() => setInput(suggestion)}
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className={styles.inputArea}>
-            <div className={styles.optionalFields}>
-              <input
-                type="text"
-                placeholder="Budget (optional, e.g., $50,000)"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                className={styles.optionalInput}
-              />
-              <input
-                type="text"
-                placeholder="Timeline (optional, e.g., 3 months)"
-                value={timeline}
-                onChange={(e) => setTimeline(e.target.value)}
-                className={styles.optionalInput}
-              />
-            </div>
             <form onSubmit={handleSubmit} className={styles.inputForm}>
               <textarea
                 value={input}
@@ -804,7 +778,7 @@ export const AIChatbot: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? '✕' : '🤖'}
-        {!isOpen && <span className={styles.toggleText}>AI Role Advisor</span>}
+        {!isOpen && <span className={styles.toggleText}>Chatbot</span>}
       </button>
     </div>
   );

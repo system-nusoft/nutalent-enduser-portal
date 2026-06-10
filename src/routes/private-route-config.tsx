@@ -2,6 +2,7 @@ import { HddOutlined } from "@ant-design/icons";
 import {
   AddUserBlack,
   Calender,
+  ChatbotSidebarIcon,
   ClockSideBar,
   HomeIcon,
   InquiriesSidebarIcon,
@@ -11,6 +12,7 @@ import {
   User,
 } from "src/assets";
 import {
+  ChatbotPage,
   CreateProject,
   Profile,
   ProjectListing,
@@ -180,6 +182,14 @@ export default [
         sidebar: false,
       },
     ],
+  },
+  {
+    component: (props: any) => <ChatbotPage {...props} />,
+    path: "/chatbot",
+    title: "Chatbot",
+    permission: [ROLES.END_USER],
+    icon: () => <ChatbotSidebarIcon />,
+    sidebar: true,
   },
   {
     component: (props: any) => <Profile {...props} />,
