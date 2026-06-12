@@ -12,6 +12,7 @@ import { DatePicker } from "src/components/date-picker";
 import { PrivatePageTemplate } from "src/components/private-page-template/PrivatePageTemplate";
 import { RoundTag } from "src/components/round-tag/RoundTag";
 import { ROUTES } from "src/constants/navigation-routes";
+import { formatDisplayName } from "src/utils/formatName";
 import { getEngagementLoading } from "src/store/selectors/features/engagements-saga";
 import { getResourcesByIdData } from "src/store/selectors/features/resource-by-id";
 import RequestAppAction from "src/store/slices/app-actions";
@@ -125,7 +126,7 @@ export const HireResource: React.FC = () => {
           <div className="flex items-start flex-col">
             <div className="flex text-start items-start flex-col gap-1">
               <span className={styles.resource_name}>
-                {(data?.firstName ?? "") + " " + (data?.lastName ?? "")}
+                {formatDisplayName(data?.firstName, data?.lastName)}
               </span>
               <span className={styles.resource_title}>{data?.title}</span>
             </div>

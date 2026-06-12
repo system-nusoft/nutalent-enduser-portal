@@ -17,6 +17,7 @@ import { getUserId } from "src/store/selectors/features/login-selector";
 import { resourcesLoading } from "src/store/selectors/features/resources-selector";
 import RequestAppAction from "src/store/slices/app-actions";
 import { INTERVIEW_STATUS } from "src/utils/enum";
+import { formatDisplayName } from "src/utils/formatName";
 
 interface props {
   title: string;
@@ -99,7 +100,7 @@ export const InterviewListing = ({ title }: props) => {
               name?.charAt(0)
             )}
           </Avatar>{" "}
-          {name + " " + record?.resourceLastName}
+          {formatDisplayName(name, record?.resourceLastName)}
         </span>
       ),
     },

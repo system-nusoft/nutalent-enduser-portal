@@ -32,6 +32,7 @@ import {
   returnTime,
   returnYearOnly,
 } from "src/utils/functions";
+import { formatDisplayName } from "src/utils/formatName";
 import styles from "./styles.module.scss";
 interface props {
   title?: string;
@@ -498,10 +499,7 @@ export const Inquires = ({ title }: props) => {
                         </Avatar>
                         <div className="flex flex-col">
                           <p className={`${styles.chat_text_fname}`}>
-                            {resourceFirstName ?? ""}
-                          </p>
-                          <p className={styles.chat_text}>
-                            {resourceLastName ?? ""}
+                            {formatDisplayName(resourceFirstName, resourceLastName)}
                           </p>
                         </div>
                       </div>
@@ -544,10 +542,7 @@ export const Inquires = ({ title }: props) => {
                         <div className="flex flex-col">
                           <div className="flex gap-1 items-center">
                             <p className={`${styles.chat_text_fname}`}>
-                              {selected?.resourceFirstName ?? ""}
-                            </p>
-                            <p className={styles.chat_text}>
-                              {selected?.resourceLastName ?? ""}
+                              {formatDisplayName(selected?.resourceFirstName, selected?.resourceLastName)}
                             </p>
                           </div>
                           <p className={`${styles.chat_text}`}>
