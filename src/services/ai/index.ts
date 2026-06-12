@@ -247,11 +247,17 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   conversationId: string;
-  intent: 'role_identification' | 'pricing' | 'platform_data' | 'general';
+  intent: 'role_identification' | 'pricing' | 'platform_data' | 'create_project' | 'general';
   text: string;
   message?: string;
   data?: UnifiedRolesWithPricingResponse | PricingResult[] | any;
   rolesData?: UnifiedRolesWithPricingResponse;
+  resources?: MatchingResource[];
+  count?: number;
+  projectData?: {
+    title?: string;
+    description?: string;
+  };
 }
 
 export class AiService extends HttpService {

@@ -4,6 +4,7 @@ import { CalendarOutlined, EyeOutlined, SendOutlined, ClockCircleOutlined } from
 import { useTranslation } from 'react-i18next';
 import { MatchingResource } from 'src/services/ai';
 import { RESOURCE_STATUS } from 'src/utils/enum';
+import { formatFullNameString } from 'src/utils/formatName';
 import styles from './ResourceCard.module.scss';
 
 interface ResourceCardProps {
@@ -54,7 +55,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
             {resource?.fullName?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
           <div className={styles.info}>
-            <h4 className={styles.name}>{resource?.fullName || 'Unknown'}</h4>
+            <h4 className={styles.name}>{formatFullNameString(resource?.fullName) || 'Unknown'}</h4>
             <p className={styles.title}>{resource?.title || 'N/A'}</p>
           </div>
         </div>

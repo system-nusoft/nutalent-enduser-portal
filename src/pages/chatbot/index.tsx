@@ -1,23 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
 import { Tooltip } from 'antd';
-import { ResourceCard } from 'src/components/ai-chatbot/ResourceCard';
 import { ResourceAccordion } from 'src/components/ai-chatbot/ResourceAccordion';
 import { ConversationHistory } from './ConversationHistory';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles.module.scss';
-import { EngagementService } from 'src/services/engagement';
 import { AppService } from 'src/services/app';
-import { Notification } from 'src/components';
 import { ROUTES } from 'src/constants/navigation-routes';
-import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
 import { AiService } from 'src/services/ai';
 import {
   ChatRequest,
   ChatResponse,
   ConversationListItem,
   UnifiedRolesWithPricingResponse,
+  OptimizePricingResponse,
   PricingResult,
   RoleWithResources,
 } from 'src/services/ai';
@@ -25,6 +21,15 @@ import {
 enum MessageRole {
   USER = 'user',
   ASSISTANT = 'assistant'
+}
+
+enum ChatIntent {
+  ROLE_IDENTIFICATION = 'role_identification',
+  PRICING = 'pricing',
+  PLATFORM_DATA = 'platform_data',
+  GENERAL = 'general',
+  UNKNOWN = 'unknown',
+  CREATE_PROJECT = 'create_project',
 }
 
 interface Message {
@@ -35,12 +40,12 @@ interface Message {
   rolesWithResources?: RoleWithResources[];
   pricingData?: PricingResult[];
   unifiedData?: UnifiedRolesWithPricingResponse;
+  projectData?: { title?: string; description?: string };
 }
 
 export const ChatbotPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [requirements, setRequirements] = useState<string[]>([]);
@@ -52,15 +57,7 @@ export const ChatbotPage: React.FC = () => {
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [conversations, setConversations] = useState<ConversationListItem[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
-  const engagementService = new EngagementService();
   const aiService = new AiService();
-
-  const messageSuggestions = [
-    t('aiChatbot.suggestion1'),
-    t('aiChatbot.suggestion2'),
-    t('aiChatbot.suggestion3'),
-    t('aiChatbot.suggestion4')
-  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,85 +96,20 @@ export const ChatbotPage: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const extractRequirements = (): string[] => {
-    return [];
-  };
-
-  const handleScheduleInterview = (resourceId: string) => {
-    const path = ROUTES.SCHEDULE_INTERVIEW.replace(':id', resourceId);
-    navigate(path, {
-      state: {
-        data: {
-          id: resourceId,
-        },
-      },
-    });
-  };
-
-  const handleViewTimesheet = async (resourceId: string) => {
-    try {
-      const baseUrl = process.env.REACT_APP_BASE_URL;
-      if (!baseUrl) {
-        console.error('Base URL not configured');
-        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
-        return;
-      }
-
-      const response = await engagementService.getEngagements(baseUrl, 1, 10);
-      const engagements = response?.data?.items || [];
-      const engagement = engagements.find((eng: any) => 
-        eng?.resource?.id === resourceId && eng?.hiringStatus === ENGAGEMENTS_STATUS.ACTIVE
-      );
-      
-      if (engagement?.id) {
-        navigate(ROUTES.VIEW_TIMESHEET.replace(':engagementId', engagement.id).replace(':resourceId', resourceId));
-      } else {
-        console.log('No active engagement found for resource:', resourceId);
-        navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
-      }
-    } catch (error) {
-      console.error('Error fetching engagements:', error);
-      navigate(`${ROUTES.TIMESHEETS}?resourceId=${resourceId}`);
-    }
-  };
-
-  const handleViewInvoices = (resourceId: string) => {
-    console.log('View invoices for resource:', resourceId);
-  };
-
-  const handleSendInquiry = async (resourceId: string) => {
-    try {
-      const baseUrl = process.env.REACT_APP_BASE_URL;
-      if (!baseUrl) {
-        Notification({
-          type: 'error',
-          message: t('error.configurationError')
-        });
-        return;
-      }
-
-      const message = t('aiChatbot.inquiryMessage');
-      await engagementService.sendMessage(baseUrl, resourceId, message);
-      
-      Notification({
-        type: 'success',
-        message: t('notification.inquirySent')
-      });
-      
-      navigate(ROUTES.INQUIRIES);
-    } catch (error) {
-      console.error('Error sending inquiry:', error);
-      Notification({
-        type: 'error',
-        message: t('error.inquiryFailed')
-      });
-    }
-  };
-
   const handleViewDetails = (resourceId: string) => {
     navigate(`${ROUTES.RESOURCEBYID.replace(':id', resourceId)}`);
   };
 
+  const handleCreateProject = (projectData?: { title?: string; description?: string }) => {
+    navigate(ROUTES.CREATE_PROJECT, {
+      state: {
+        data: {
+          name: projectData?.title || '',
+          summary: projectData?.description || '',
+        },
+      },
+    });
+  };
   const handleBookmarkAll = async (resourceIds: string[]) => {
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -287,14 +219,30 @@ export const ChatbotPage: React.FC = () => {
       const conversation = await aiService.getConversation(baseUrl, id);
       
       setConversationId(id);
-      const loadedMessages: Message[] = conversation.messages.map(msg => ({
-        role: msg.role === 'user' ? MessageRole.USER : MessageRole.ASSISTANT,
-        content: msg.content,
-        timestamp: new Date(msg.createdAt),
-        unifiedData: msg.unifiedData,
-        pricingData: msg.pricingData,
-        rolesWithResources: msg.rolesWithResources
-      }));
+      const loadedMessages: Message[] = conversation.messages.map(msg => {
+        const toolCalls = (msg as any).toolCalls || {};
+
+        let unifiedData: UnifiedRolesWithPricingResponse | undefined;
+        let pricingData: PricingResult[] | undefined;
+        let projectData: { title?: string; description?: string } | undefined;
+
+        if (toolCalls.intent === ChatIntent.ROLE_IDENTIFICATION) {
+          unifiedData = toolCalls.rolesData as UnifiedRolesWithPricingResponse;
+        } else if (toolCalls.intent === ChatIntent.PRICING) {
+          pricingData = (toolCalls.rolesData as OptimizePricingResponse | undefined)?.results || [];
+        } else if (toolCalls.intent === ChatIntent.CREATE_PROJECT) {
+          projectData = toolCalls.rolesData as { title?: string; description?: string } | undefined;
+        }
+
+        return {
+          role: msg.role === 'user' ? MessageRole.USER : MessageRole.ASSISTANT,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt),
+          unifiedData,
+          pricingData,
+          projectData,
+        };
+      });
       
       setMessages(loadedMessages);
       setLoading(false);
@@ -378,9 +326,17 @@ export const ChatbotPage: React.FC = () => {
       setMessages(prev => prev.filter(msg => !msg.isLoading));
 
       // Handle response based on intent
+      console.log('Response intent:', response.intent, 'ChatIntent.PRICING:', ChatIntent.PRICING, 'match:', response.intent === ChatIntent.PRICING);
       let assistantMessage: Message;
 
-      if (response.intent === 'role_identification' && (response.rolesData || response.data)) {
+      if (response.intent === ChatIntent.CREATE_PROJECT) {
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: response.text || 'Response received',
+          timestamp: new Date(),
+          projectData: response.projectData
+        };
+      } else if (response.intent === ChatIntent.ROLE_IDENTIFICATION && (response.rolesData || response.data)) {
         const unifiedData = (response.rolesData || response.data) as UnifiedRolesWithPricingResponse;
         let summaryContent = `${unifiedData.overallSavingsSummary || 'Analysis complete'}\n\nFound ${unifiedData.totalEstimatedTeamSize || 0} recommended roles with ${unifiedData.totalMatchingResources || 0} matching resources.`;
         
@@ -394,8 +350,17 @@ export const ChatbotPage: React.FC = () => {
           timestamp: new Date(),
           unifiedData: unifiedData
         };
+       } else if (response.intent === ChatIntent.PRICING) {
+        const pricingResponse = response.rolesData as OptimizePricingResponse | undefined;
+        console.log('PRICING intent matched. rolesData:', response.rolesData, 'results:', pricingResponse?.results);
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: response.text || 'Response received',
+          timestamp: new Date(),
+          pricingData: pricingResponse?.results || []
+        };
       } else {
-        // For pricing, platform_data, or general intents
+        // For platform_data or general intents
         assistantMessage = {
           role: MessageRole.ASSISTANT,
           content: response.text || response.message || 'Response received',
@@ -469,7 +434,7 @@ export const ChatbotPage: React.FC = () => {
                     <div className={styles.rateRow}>
                       {level?.marketRate && (
                         <div className={styles.rateBlock}>
-                          <span className={styles.rateLabel}>Market ({level?.detectedRegion || 'Global'})</span>
+                          <span className={styles.rateLabel}>Tentative Average Market Rate</span>
                           <span className={styles.rateValue}>${(level?.marketRate?.avg || 0).toFixed(2)}/hr</span>
                           <span className={styles.rateRange}>
                             ${(level?.marketRate?.min || 0)}–${(level?.marketRate?.max || 0)}
@@ -497,6 +462,81 @@ export const ChatbotPage: React.FC = () => {
                         onViewDetails={handleViewDetails}
                         onBookmarkAll={handleBookmarkAll}
                         roleSeniority={role?.seniorityLevel || ''}
+                      />
+                    ) : (
+                      <div className={styles.noResourcesLabel}>
+                        {t('aiChatbot.noMatchedResources')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.noResourcesLabel}>
+                {t('aiChatbot.noMatchedResources')}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderPricingData = (pricingResults: PricingResult[]) => {
+    if (!pricingResults || pricingResults.length === 0) return null;
+
+    return (
+      <div className={styles.unifiedResults}>
+        {pricingResults.map((result, resultIdx) => (
+          <div key={resultIdx} className={styles.roleSection}>
+            <div className={styles.roleHeader}>
+              <h4 className={styles.roleTitle}>
+                {result?.role || 'Unknown Role'}
+              </h4>
+            </div>
+
+            {result?.levelResults && result.levelResults.length > 0 ? (
+              <div className={styles.pricingLevelsSection}>
+                {result.levelResults.map((level, levelIdx) => (
+                  <div key={levelIdx} className={`${styles.levelCard} ${level.isCheaper ? styles.cheaperCard : styles.regularCard}`}>
+                    <div className={styles.levelHeader}>
+                      <span className={styles.levelTitle}>{level.level || 'Standard'}</span>
+                      <span className={styles.resourceCount}>
+                        {level.resourceCount || 0} {(level.resourceCount || 0) === 1 ? 'resource' : 'resources'}
+                      </span>
+                    </div>
+
+                    <div className={styles.rateRow}>
+                      {level?.marketRate && (
+                        <div className={styles.rateBlock}>
+                          <span className={styles.rateLabel}>Market ({level?.detectedRegion || 'Global'})</span>
+                          <span className={styles.rateValue}>${(level?.marketRate?.avg || 0).toFixed(2)}/hr</span>
+                          <span className={styles.rateRange}>
+                            ${(level?.marketRate?.min || 0)}–${(level?.marketRate?.max || 0)}
+                          </span>
+                        </div>
+                      )}
+                      <div className={styles.rateBlock}>
+                        <span className={styles.rateLabel}>Our Rate</span>
+                        <span className={styles.rateValue}>${(level?.ourRates?.avg || 0).toFixed(2)}/hr</span>
+                        <span className={styles.rateRange}>
+                          ${(level?.ourRates?.min || 0)}–${(level?.ourRates?.max || 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {level?.isCheaper && (level?.savings || 0) > 0 && (
+                      <div className={styles.savingsBanner}>
+                        {level?.savingsPercent || 0}% cheaper — saving ~${(level?.savings || 0).toFixed(2)}/hr
+                      </div>
+                    )}
+
+                    {level.resources && level.resources.length > 0 ? (
+                      <ResourceAccordion
+                        resources={level.resources}
+                        onViewDetails={handleViewDetails}
+                        onBookmarkAll={handleBookmarkAll}
+                        roleSeniority={level?.level || ''}
                       />
                     ) : (
                       <div className={styles.noResourcesLabel}>
@@ -590,6 +630,30 @@ export const ChatbotPage: React.FC = () => {
                     </div>
                   ) : msg.unifiedData ? (
                     renderUnifiedData(msg.unifiedData)
+                  ) : msg.pricingData ? (
+                    <>
+                      <div className={styles.messageText}>
+                        {msg.content.split('\n').map((line, i) => (
+                          <span key={i}>{line}<br /></span>
+                        ))}
+                      </div>
+                      {renderPricingData(msg.pricingData)}
+                    </>
+                  ) : msg.projectData !== undefined ? (
+                    <>
+                      <div className={styles.messageText}>
+                        {msg.content.split('\n').map((line, i) => (
+                          <span key={i}>{line}<br /></span>
+                        ))}
+                      </div>
+                      <button
+                        className={styles.sendButton}
+                        onClick={() => handleCreateProject(msg.projectData)}
+                        style={{ marginTop: '8px' }}
+                      >
+                        Create Project
+                      </button>
+                    </>
                   ) : (
                     <div className={styles.messageText}>
                       {msg.content.split('\n').map((line, i) => {
