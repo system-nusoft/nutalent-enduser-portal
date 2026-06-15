@@ -11,23 +11,29 @@ import { AppService } from 'src/services/app';
 import { Notification } from 'src/components';
 import { ROUTES } from 'src/constants/navigation-routes';
 import RequestAppAction from 'src/store/slices/app-actions';
-import { ENGAGEMENTS_STATUS, CLASSIFICATION_INTENT } from 'src/utils/enum';
+import { ENGAGEMENTS_STATUS } from 'src/utils/enum';
 import { AiService } from 'src/services/ai';
 import {
   ChatRequest,
   ChatResponse,
   UnifiedRolesWithPricingResponse,
-  ResourceWithPricing,
-  PricingLevel,
-  RoleWithPricingDetails,
+  OptimizePricingResponse,
   RoleWithResources,
   PricingResult,
-  Role
 } from 'src/services/ai';
 
 enum MessageRole {
   USER = 'user',
   ASSISTANT = 'assistant'
+}
+
+enum ChatIntent {
+  ROLE_IDENTIFICATION = 'role_identification',
+  PRICING = 'pricing',
+  PLATFORM_DATA = 'platform_data',
+  CREATE_PROJECT = 'create_project',
+  GENERAL = 'general',
+  UNKNOWN = 'unknown',
 }
 
 interface Message {
@@ -38,6 +44,7 @@ interface Message {
   rolesWithResources?: RoleWithResources[];
   pricingData?: PricingResult[];
   unifiedData?: UnifiedRolesWithPricingResponse;
+  projectData?: { title?: string; description?: string };
 }
 
 export const AIChatbot: React.FC = () => {
@@ -48,7 +55,6 @@ export const AIChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [requirements, setRequirements] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -59,15 +65,8 @@ export const AIChatbot: React.FC = () => {
   const engagementService = new EngagementService();
   const aiService = new AiService();
 
-  const messageSuggestions = [
-    t('aiChatbot.suggestion1'),
-    t('aiChatbot.suggestion2'),
-    t('aiChatbot.suggestion3'),
-    t('aiChatbot.suggestion4')
-  ];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
   };
 
 
@@ -105,6 +104,15 @@ export const AIChatbot: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // When the chat window opens, jump to the bottom instantly (no animation)
+  useEffect(() => {
+    if (isOpen) {
+      // Wait for the DOM to render the messages before scrolling
+      const timer = setTimeout(() => scrollToBottom(false), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen && !locationFetched) {
       fetchUserLocation();
@@ -134,12 +142,6 @@ export const AIChatbot: React.FC = () => {
   if (location.pathname === '/chatbot') {
     return null;
   }
-
-  const extractRequirements = (): string[] => {
-    // Keywords should be extracted from backend configuration
-    // For now, return empty array and let backend handle requirement extraction
-    return [];
-  };
 
   // Resource action handlers
   const handleScheduleInterview = (resourceId: string) => {
@@ -185,12 +187,6 @@ export const AIChatbot: React.FC = () => {
     }
   };
 
-  const handleViewInvoices = (resourceId: string) => {
-    // Handle view invoices - navigate to invoices page
-    console.log('View invoices for resource:', resourceId);
-    // TODO: Implement navigation to invoices page
-  };
-
   const handleSendInquiry = async (resourceId: string) => {
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -224,6 +220,18 @@ export const AIChatbot: React.FC = () => {
   const handleViewDetails = (resourceId: string) => {
     // Navigate to resource detail page
     navigate(`${ROUTES.RESOURCEBYID.replace(':id', resourceId)}`);
+  };
+
+  const handleCreateProject = (projectData?: { title?: string; description?: string }) => {
+    setIsOpen(false);
+    navigate(ROUTES.CREATE_PROJECT, {
+      state: {
+        data: {
+          name: projectData?.title || '',
+          summary: projectData?.description || '',
+        },
+      },
+    });
   };
 
   const handleBookmarkAll = async (resourceIds: string[]) => {
@@ -355,7 +363,14 @@ export const AIChatbot: React.FC = () => {
       // Handle response based on intent
       let assistantMessage: Message;
 
-      if (response.intent === 'role_identification' && (response.rolesData || response.data)) {
+      if (response.intent === ChatIntent.CREATE_PROJECT) {
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: response.text || 'Response received',
+          timestamp: new Date(),
+          projectData: response.projectData
+        };
+      } else if (response.intent === ChatIntent.ROLE_IDENTIFICATION && (response.rolesData || response.data)) {
         const unifiedData = (response.rolesData || response.data) as UnifiedRolesWithPricingResponse;
         let summaryContent = `${unifiedData.overallSavingsSummary || 'Analysis complete'}\n\nFound ${unifiedData.totalEstimatedTeamSize || 0} recommended roles with ${unifiedData.totalMatchingResources || 0} matching resources.`;
         
@@ -369,8 +384,16 @@ export const AIChatbot: React.FC = () => {
           timestamp: new Date(),
           unifiedData: unifiedData
         };
+      } else if (response.intent === ChatIntent.PRICING) {
+        const pricingResponse = response.rolesData as OptimizePricingResponse | undefined;
+        assistantMessage = {
+          role: MessageRole.ASSISTANT,
+          content: response.text || 'Response received',
+          timestamp: new Date(),
+          pricingData: pricingResponse?.results || []
+        };
       } else {
-        // For pricing, platform_data, or general intents
+        // For platform_data or general intents
         assistantMessage = {
           role: MessageRole.ASSISTANT,
           content: response.text || response.message || 'Response received',
@@ -400,12 +423,6 @@ export const AIChatbot: React.FC = () => {
       e.preventDefault();
       handleSubmit();
     }
-  };
-
-  const handleReset = () => {
-    setMessages([]);
-    setInput('');
-    setRequirements([]);
   };
 
   const renderUnifiedData = (data: UnifiedRolesWithPricingResponse) => {
@@ -451,7 +468,7 @@ export const AIChatbot: React.FC = () => {
                     <div className={styles.rateRow}>
                       {level?.marketRate && (
                         <div className={styles.rateBlock}>
-                          <span className={styles.rateLabel}>Market ({level?.detectedRegion || 'Global'})</span>
+                          <span className={styles.rateLabel}>Tentative Average Market Rate</span>
                           <span className={styles.rateValue}>${(level?.marketRate?.avg || 0).toFixed(2)}/hr</span>
                           <span className={styles.rateRange}>
                             ${(level?.marketRate?.min || 0)}–${(level?.marketRate?.max || 0)}
@@ -681,6 +698,21 @@ export const AIChatbot: React.FC = () => {
                       renderUnifiedData(msg.unifiedData)
                     ) : msg.pricingData && msg.pricingData.length > 0 ? (
                       renderPricingResult(msg.pricingData)
+                    ) : msg.projectData !== undefined ? (
+                      <>
+                        <div className={styles.messageText}>
+                          {msg.content.split('\n').map((line, i) => (
+                            <span key={i}>{line}<br /></span>
+                          ))}
+                        </div>
+                        <button
+                          className={styles.sendButton}
+                          onClick={() => handleCreateProject(msg.projectData)}
+                          style={{ marginTop: '8px' }}
+                        >
+                          Create Project
+                        </button>
+                      </>
                     ) : (
                       <>
                         <div className={styles.messageText}>

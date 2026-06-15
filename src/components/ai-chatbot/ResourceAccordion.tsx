@@ -4,7 +4,7 @@ import { EyeOutlined, StarOutlined, DownOutlined, UpOutlined, CaretRightOutlined
 import { useTranslation } from 'react-i18next';
 import { ResourceWithPricing, ResourceProfile } from 'src/services/ai';
 import { RESOURCE_STATUS } from 'src/utils/enum';
-import { Notification } from 'src/components';
+import { formatFullNameString } from 'src/utils/formatName';
 import styles from './ResourceAccordion.module.scss';
 
 // Union type to handle both resource types
@@ -141,7 +141,7 @@ export const ResourceAccordion: React.FC<ResourceAccordionProps> = ({
             >
               <div className={styles.resourceInfo}>
                 <div className={styles.profileSection}>
-                  <Avatar
+                   <Avatar
                     src={normalizedResource.profilePicture}
                     size={40}
                     className={styles.avatar}
@@ -149,7 +149,7 @@ export const ResourceAccordion: React.FC<ResourceAccordionProps> = ({
                     {normalizedResource.fullName?.charAt(0)?.toUpperCase() || 'U'}
                   </Avatar>
                   <div className={styles.info}>
-                    <h4 className={styles.name}>{normalizedResource.fullName || 'Unknown'}</h4>
+                    <h4 className={styles.name}>{formatFullNameString(normalizedResource.fullName) || 'Unknown'}</h4>
                     <p className={styles.title}>{normalizedResource.title || 'N/A'}</p>
                     {experienceText && (
                       <p className={styles.experience}>{experienceText}</p>

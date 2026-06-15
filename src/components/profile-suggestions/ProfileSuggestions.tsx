@@ -8,11 +8,10 @@ import {
   StarSimpleGolden,
 } from "src/assets";
 import {
-  getElasticSearchData,
   getElasticSearchList,
-  getElasticSearchMeta,
 } from "src/store/selectors/features/elastic-search-selector";
 import { colors, getRandomColor } from "src/utils/colors";
+import { formatDisplayName } from "src/utils/formatName";
 import Button from "../button/Button";
 import { RoundTag } from "../round-tag/RoundTag";
 import styles from "./styles.module.scss";
@@ -142,7 +141,7 @@ export const ProfileSuggestions = ({
       {firstName && profileList?.length > 0 && (
         <div className={styles.heading}>
           {t("heading.profileSimilarTo", {
-            name: (firstName ?? "") + " " + (lastName ?? ""),
+            name: formatDisplayName(firstName, lastName),
           })}
         </div>
       )}
@@ -191,7 +190,7 @@ export const ProfileSuggestions = ({
                       className={styles.title}
                       style={{ textAlign: "center" }}
                     >
-                      {(firstName ?? "") + " " + (lastName ?? "")}
+                      {formatDisplayName(firstName, lastName)}
                     </div>
                     <div
                       style={{ textAlign: "center" }}
@@ -300,7 +299,7 @@ export const ProfileSuggestions = ({
                     <div className="w-full  relative flex flex-col">
                       <div className="flex flex-col">
                         <div className={styles.title}>
-                          {firstName + " " + lastName}
+                          {formatDisplayName(firstName, lastName)}
                         </div>
                         <div className={styles.jobTitle}>{title}</div>
                         <div className="flex mt-4 flex-wrap gap-2">

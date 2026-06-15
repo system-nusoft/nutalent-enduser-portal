@@ -32,6 +32,7 @@ import {
   formatToMonthYear,
   formatYearsOfExperience,
 } from "src/utils/date.util";
+import { formatDisplayName } from "src/utils/formatName";
 import styles from "./styles.module.scss";
 
 export const ResourceProfile: React.FC = () => {
@@ -351,7 +352,7 @@ export const ResourceProfile: React.FC = () => {
 
                 <div className="flex flex-col items-start">
                   <span className={styles.resource_name}>
-                    {(data?.firstName ?? "") + " " + (data?.lastName ?? "")}
+                    {formatDisplayName(data?.firstName, data?.lastName)}
                   </span>
                   <span className={styles.resource_job_title}>
                     {data?.title}

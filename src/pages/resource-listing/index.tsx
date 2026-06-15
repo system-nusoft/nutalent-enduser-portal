@@ -26,6 +26,7 @@ import { toggleClearFavoriteResources } from "src/store/slices/features/favorite
 import { toggleClearResources } from "src/store/slices/features/resources";
 import { colors } from "src/utils/colors";
 import { RESOURCE_STATUS } from "src/utils/enum";
+import { formatDisplayName } from "src/utils/formatName";
 import styles from "./styles.module.scss";
 interface props {
   title: string;
@@ -76,7 +77,7 @@ export const ResourceListing = ({ title }: props) => {
           ) : (
             <Avatar className="overflow-hidden">{name?.charAt(0)}</Avatar>
           )}
-          {name + " " + record.lastName}
+          {formatDisplayName(name, record.lastName)}
         </span>
       ),
     },

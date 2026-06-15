@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { LogoBlack, User } from "src/assets";
+import { LogoBlack, User, ChatbotSidebarIcon } from "src/assets";
 import { ROUTES } from "src/constants/navigation-routes";
 import DashboardContent from "src/routes/dashboard-routes";
 import privateRouteConfig from "src/routes/private-route-config";
@@ -58,6 +58,7 @@ export const Dashboard: React.FC = () => {
       ({ permission, title }) =>
         permission.includes(role) &&
         title !== "Profile Settings" &&
+        title !== "Chatbot" &&
         title !== t("heading.help&feedback")
     )
     .filter(({ sidebar }) => sidebar)
@@ -125,6 +126,11 @@ export const Dashboard: React.FC = () => {
   }, [location.pathname]);
 
   const endItemsRoutes = [
+    {
+      name: "Chatbot",
+      icon: () => <ChatbotSidebarIcon className={`${styles.icon}`} />,
+      path: ROUTES.CHATBOT, // whatever the route path is in privateRouteConfig
+    },
     {
       name: t("heading.account"),
       icon: () => <User />,
